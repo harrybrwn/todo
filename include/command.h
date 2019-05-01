@@ -10,10 +10,12 @@ typedef struct command {
 	int hasargs;
 } CMD;
 
-void setToplevel(CMD*);
+void setRoot(CMD*);
 void addCommand(CMD*);
 CMD *findCommand(char*);
 int parse(int, char**);
+char** getSlice(int, char**, int);
 void help(CMD);
+
 
 #endif

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include "command.h"
 
 CMD _top;
@@ -17,7 +18,7 @@ char** getSlice(int arrlen, char** arr, int start) {
 	return newarr;
 }
 
-void setToplevel(CMD *top) {
+void setRoot(CMD *top) {
 	_top = *top;
 }
 
@@ -42,15 +43,28 @@ int parse(int len, char **args) {
 		free(cmd_args);
 		return 1;
 	}
-	help(_top);
+	// help(_top);
 	return 0;
 }
 
 void help(CMD top) {
 	int i = 0;
+	int max = 4;
 	CMD *arg;
-	printf("\nUse:\n  %s [command]\n\n", top.use);
+	printf("Use:\n  %s [command]\n\n", top.use);
 	printf("Commands:\n");
+	while (1) {
+		arg = _commands[i];
+		if (arg == NULL)
+			break;
+
+		int l = sizeof(arg->use);
+		if (l > max)
+			max = l;
+		i++;
+	}
+
+	i = 0;
 	while (1) {
 		arg = _commands[i];
 		if (arg == NULL) {

@@ -8,5 +8,9 @@ bin/todo
 *.out
 *.i
 
+# Tests
+test*
+
 # Notes
 *.txt
+TODO

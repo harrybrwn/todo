@@ -12,33 +12,36 @@ CFLAGS=-iquote $(INC)
 # Files
 NAMES=todo command
 SRC=$(patsubst %,$(SRC_DIR)/%.c,$(NAMES))
-OBJS=$(patsubst %,$(OBJ_DIR)/%.o,$(NAMES))
+OBJ=$(patsubst %,$(OBJ_DIR)/%.o,$(NAMES))
 ASM=$(patsubst %,$(ASM_DIR)/%.s,$(NAMES))
 
+bin/todo:
+	$(CC) $(CFLAGS) $(SRC) -o $(OUT)
 
-bin/todo: $(OBJ_DIR)/todo.o
-	$(CC) $(CFLAGS) $(OBJS) -o $(OUT)
 
-%.o: %.s
-	$(CC) $(CFLAGS) -c $(ASM)
-	@mv *.o $(OBJ_DIR)
+# bin/todo: $(OBJ_DIR)/todo.o $(OBJ_DIR)/command.o
+# 	$(CC) $(CFLAGS) $(OBJ) -o $(OUT)
 
-%.s: $(SRC) $(INC)/command.h
-	$(CC) $(CFLAGS) -S $(SRC)
-	@mv *.s $(ASM_DIR)
+# %.o: %.s
+# 	$(CC) $(CFLAGS) -c $(ASM)
+# 	@mv *.o $(OBJ_DIR)
+#
+# %.s: $(SRC)
+# 	$(CC) $(CFLAGS) -S $(SRC)
+# 	@mv *.s $(ASM_DIR)
 
-clean: base
+test: test.c
+	$(CC) -save-temps test.c -o test
+
+clean-test:
+	rm test
+	rm test.i
+	rm test.s
+	rm test.o
+
+clean:
 	rm $(OUT)
 	rm `find . -name '*.o'`
 	rm `find . -name '*.s'`
 
-raw: base
-	$(CC) $(CFLAGS) -E $(SRC) > raw_output.i
-
-imports-paths: base
-	@echo $(SRC)
-	$(CC) $(CFLAGS) -E -M $(SRC)
-
-base: $(SRC) $(INC)/command.h
-
-.PHONY: clean raw base imports-paths
+.PHONY: clean
