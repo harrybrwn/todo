@@ -1,9 +1,20 @@
-todo: todo.o command.o
-	gcc todo.o command.o -o todo.exe
-	del *.gch
+CC=gcc
+CFLAGS=-iquote include
 
-todo.o: todo.c
-	gcc -c todo.c
+OUT=bin/todo
+OBJ_DIR=obj
+SRC_DIR=src
 
-command.o: command.c command.h
-	gcc -c command.c
+FILES=todo.c command.c
+
+OBJS=$(patsubst %,$(OBJ_DIR)/%,$(patsubst %.c,%.o, $(FILES)))
+SRC=$(patsubst %,$(SRC_DIR)/%,$(FILES))
+
+todo: %.o
+	$(CC) $(CFLAGS) $(OBJS) -o $(OUT)
+
+%.o:
+	$(CC) $(CFLAGS) -c $(SRC)
+	@mv *.o $(OBJ_DIR)
+
+.PHONY: out

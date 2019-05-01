@@ -1,0 +1,8 @@
+# Binaries
+*.exe
+bin/todo
+
+# Output
+*.s
+*.o
+*.out
