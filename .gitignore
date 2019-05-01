@@ -6,3 +6,6 @@ bin/todo
 *.s
 *.o
 *.out
+
+# Notes
+*.txt
