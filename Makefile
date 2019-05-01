@@ -1,20 +1,44 @@
-CC=gcc
-CFLAGS=-iquote include
-
+# Dirs
 OUT=bin/todo
-OBJ_DIR=obj
 SRC_DIR=src
+INC=include
+OBJ_DIR=bin/obj
+ASM_DIR=bin/asm
 
-FILES=todo.c command.c
+# Compiler
+CC=gcc
+CFLAGS=-iquote $(INC)
 
-OBJS=$(patsubst %,$(OBJ_DIR)/%,$(patsubst %.c,%.o, $(FILES)))
-SRC=$(patsubst %,$(SRC_DIR)/%,$(FILES))
+# Files
+NAMES=todo command
+SRC=$(patsubst %,$(SRC_DIR)/%.c,$(NAMES))
+OBJS=$(patsubst %,$(OBJ_DIR)/%.o,$(NAMES))
+ASM=$(patsubst %,$(ASM_DIR)/%.s,$(NAMES))
 
-todo: %.o
+
+bin/todo: $(OBJ_DIR)/todo.o
 	$(CC) $(CFLAGS) $(OBJS) -o $(OUT)
 
-%.o:
-	$(CC) $(CFLAGS) -c $(SRC)
+%.o: %.s
+	$(CC) $(CFLAGS) -c $(ASM)
 	@mv *.o $(OBJ_DIR)
 
-.PHONY: out
+%.s: $(SRC) $(INC)/command.h
+	$(CC) $(CFLAGS) -S $(SRC)
+	@mv *.s $(ASM_DIR)
+
+clean: base
+	rm $(OUT)
+	rm `find . -name '*.o'`
+	rm `find . -name '*.s'`
+
+raw: base
+	$(CC) $(CFLAGS) -E $(SRC) > raw_output.i
+
+imports-paths: base
+	@echo $(SRC)
+	$(CC) $(CFLAGS) -E -M $(SRC)
+
+base: $(SRC) $(INC)/command.h
+
+.PHONY: clean raw base imports-paths
