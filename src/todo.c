@@ -73,7 +73,7 @@ void run_rm(CMD *cmd, int argc, char** args) {
 }
 
 CMD rm = {
-	.use = "rm <line no.>",
+	.use = "rm <line>",
 	.descr = "remove an item from the list",
 	.run = run_rm,
 	.hasargs = true
@@ -93,7 +93,7 @@ void get_run(CMD *cmd, int argc, char** args) {
 }
 
 CMD get = {
-	.use = "get <line no.>",
+	.use = "get <line>",
 	.descr = "show the <n>th item on the list",
 	.run = get_run
 };
@@ -117,12 +117,32 @@ CMD del = {
 	.hasargs = false
 };
 
+void run_test(CMD *cmd, int argc, char** argv) {
+	printf("[");
+	for (int i = 0; i < argc; i++) {
+		if (i == argc - 1)
+			printf("%s", argv[i]);
+		else
+			printf("%s ", argv[i]);
+	}
+	printf("]\n");
+}
+
+CMD test = {
+	.use = "test",
+	.descr = "developer testing option",
+	.run = run_test,
+	.hidden = true
+};
+
 static void init() {
 	setRoot(&todo);
 
 	addCommand(&rm);
 	addCommand(&del);
 	addCommand(&get);
+
+	addCommand(&test);
 }
 
 int main(int argc, char *argv[]) {
