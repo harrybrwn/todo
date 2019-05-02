@@ -9,6 +9,7 @@ FileInfo* file_info(const char* filename) {
 		printf("cannot read file\n");
 		exit(1);
 	}
+
 	FileInfo file_info = { .lines = 0, .length = 0 };
 	char c;
 	while (c != EOF) {
@@ -58,4 +59,27 @@ int file_lines(const char* filename) {
 	}
 	fclose(fpt);
 	return n_lines;
+}
+
+void print_nextline(FILE *stream) {
+	char c = fgetc(stream);
+	while (c != EOF) {
+		printf("%c", c);
+		c = fgetc(stream);
+		if (c == '\n') {
+			printf("%c", c);
+			return;
+		}
+	}
+}
+
+void fseek_line(FILE *stream, int line) {
+	fseek(stream, 0, 0);
+	int current_line = 0;
+	char c;
+	while (current_line != line - 1) {
+		c = fgetc(stream);
+		if (c == '\n')
+			++current_line;
+	}
 }
