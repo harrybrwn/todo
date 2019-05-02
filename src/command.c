@@ -30,24 +30,24 @@ void help() {
 	Usage(_top);
 }
 
-int parse(int len, char **args) {
-	for (int i = 1; i < len; i++) {
-		if ((strcmp("help", args[i]) == 0) || (strcmp("--help", args[i]) == 0)) {
+int parse(int argc, char **argv) {
+	for (int i = 1; i < argc; i++) {
+		if ((strcmp("help", argv[i]) == 0) || (strcmp("--help", argv[i]) == 0)) {
 			Usage(_top);
 			return 1;
 		}
 
-		CMD *current = findCommand(args[i]);
+		CMD *current = findCommand(argv[i]);
 		if (current == NULL) {
 			continue;
 		}
-		if ((len - i - 1) == 0 && current->hasargs) {
+		if ((argc - i - 1) == 0 && current->hasargs) {
 			printf("Error: no arguments to %s\n", current->use);
 			return 1;
 		}
 
-		char** cmd_args = getSlice(len, args, i + 1);
-		(*current).run(current, len - i - 1, cmd_args);
+		char** cmd_args = getSlice(argc, argv, i + 1);
+		(*current).run(current, argc - i - 1, cmd_args);
 		free(cmd_args);
 		return 1;
 	}
