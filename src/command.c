@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include <string.h> // strcmp
 
 #include "command.h"
 
@@ -11,7 +11,7 @@ char** getSlice(int arrlen, char** arr, int start) {
 	// start is an index... hence the 'start - 1'
 	char** newarr = malloc((arrlen - start - 1) * sizeof(char*));
 	for (int i = start; i < arrlen; i++) {
-		newarr[i - start] = malloc(sizeof(arr[i]) * sizeof(char));
+		newarr[i - start] = malloc(strlen(arr[i]) * sizeof(char));
 		newarr[i - start] = arr[i];
 	}
 	// remember to deallocate this memory
@@ -49,21 +49,20 @@ int parse(int len, char **args) {
 
 void help(CMD top) {
 	int i = 0;
-	int max = 4;
 	CMD *arg;
 	printf("Use:\n  %s [command]\n\n", top.use);
 	printf("Commands:\n");
-	while (1) {
-		arg = _commands[i];
-		if (arg == NULL)
-			break;
-
-		int l = sizeof(arg->use);
-		if (l > max)
-			max = l;
-		i++;
-	}
-
+	// int max = 4;
+	// while (1) {
+	// 	arg = _commands[i];
+	// 	if (arg == NULL)
+	// 		break;
+	//
+	// 	int l = sizeof(arg->use);
+	// 	if (l > max)
+	// 		max = l;
+	// 	i++;
+	// }
 	i = 0;
 	while (1) {
 		arg = _commands[i];

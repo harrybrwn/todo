@@ -17,5 +17,4 @@ int parse(int, char**);
 char** getSlice(int, char**, int);
 void help(CMD);
 
-
 #endif
