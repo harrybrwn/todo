@@ -1,5 +1,6 @@
 #include <stdio.h>  // printf
 #include <stdlib.h>  // malloc, calloc, realloc
+#include <inttypes.h> // strtoumax, strtoimax
 
 #include "command.h" // CMD, addCommand, setToplevel, parse
 #include "fileio.h"  // file_len, file_lines
@@ -13,41 +14,95 @@ CMD todo = {
 	.descr = "write down your todo list.",
 };
 
-void run_add(CMD *cmd, int argc, char** args) {
-	FILE *fpt = fopen("./TODO", "a+");
-	int flen = file_lines("./TODO");
-
-	for (int i = 0; i < argc; i++) {
-		fprintf(fpt, "%d. %s\n", ++flen, args[i]);
+void print_todo() {
+	FILE *fpt = fopen("./TODO", "r");
+	if (fpt == NULL) {
+		printf("creating 'TODO' file\n");
+		FILE *f = fopen("./TODO", "w");
+		fclose(f);
 	}
+
+	int flen = file_len("./TODO");
+	if (flen == 1) {
+		printf("your TODO is empty\n");
+		return;
+	}
+
+	char c;
+	while (c != EOF) {
+		c = fgetc(fpt);
+		printf("%c", c);
+	}
+
 	fclose(fpt);
 }
 
-CMD add = {
-	.use = "add",
-	.descr = "add an item to the list",
-	.run = run_add,
-	.hasargs = true
-};
+void add_note(int argc, char** args) {
+	FILE *fpt = fopen("./TODO", "a+");
+	int flen = file_lines("./TODO");
+	fprintf(fpt, "%d. ", ++flen);
+	for (int i = 0; i < argc; i++) {
+		fprintf(fpt, "%s ", args[i]);
+	}
+	fprintf(fpt, "\n");
+	fclose(fpt);
+	print_todo();
+}
 
 void run_rm(CMD *cmd, int argc, char** args) {
-	for (int i = 0; i < argc; i++) {
-		printf("removing '%s'...\n", args[i]);
-		free(args[i]);
+	if (argc > 1) {
+		printf("too many arguments\n");
+		exit(1);
 	}
+
+	FILE *fpt = fopen("./TODO", "w+");
+	char *end;
+	// printf("%d\n", strtoumax(args[0], &end, 10));
+	int line = strtoumax(args[0], &end, 10);
+	fseek_line(fpt, line);
+
+	// fputs("line replacement", fpt);
+	// print_nextline(fpt);
+
+	// for (int i = 0; i < argc; i++) {
+	// 	// printf("removing '%s'...\n", args[i]);
+	//
+	// 	free(args[i]);
+	// }
+	fclose(fpt);
 }
 
 CMD rm = {
-	.use = "rm",
+	.use = "rm <line no.>",
 	.descr = "remove an item from the list",
 	.run = run_rm,
 	.hasargs = true
+};
+
+void get_run(CMD *cmd, int argc, char** args) {
+	if (argc > 1) {
+		printf("too many arguments\n");
+		exit(1);
+	}
+	FILE *fpt = fopen("./TODO", "a+");
+
+	char *end;
+	fseek_line(fpt, strtoumax(args[0], &end, 10));
+	print_nextline(fpt);
+	fclose(fpt);
+}
+
+CMD get = {
+	.use = "get <line no.>",
+	.descr = "show the <n>th item on the list",
+	.run = get_run
 };
 
 void run_delete(CMD *cmd, int argc, char** args) {
 	for (int i = 0; i < argc; i++) {
 		free(args[i]);
 	}
+
 	int status = remove("./TODO");
 	if (status == 0)
 		printf("deleted TODO.\n");
@@ -62,34 +117,12 @@ CMD del = {
 	.hasargs = false
 };
 
-void print_file() {
-	FILE *fpt = fopen("./TODO", "r");
-	if (fpt == NULL) {
-		printf("creating 'TODO' file\n");
-		FILE *f = fopen("./TODO", "w");
-		fclose(f);
-	}
-
-	int flen = file_len("./TODO");
-	if (flen == 1) {
-		printf("empty file has %d lines\n", file_lines("./TODO"));
-		printf("your TODO is empty\n");
-		return;
-	}
-
-	char c;
-	while (c != EOF) {
-		c = fgetc(fpt);
-		printf("%c", c);
-	}
-	fclose(fpt);
-}
-
-void init() {
+static void init() {
 	setRoot(&todo);
-	addCommand(&add);
+
 	addCommand(&rm);
 	addCommand(&del);
+	addCommand(&get);
 }
 
 int main(int argc, char *argv[]) {
@@ -97,11 +130,11 @@ int main(int argc, char *argv[]) {
 
 	if (!parse(argc, argv)) {
 		if (argc == 1) {
-			print_file();
+			print_todo();
 		} else {
-			char** args = getSlice(argc, argv, 1);
-			run_add(&add, 1, args);
-			free(args);
+			// char** args = getSlice(argc, argv, 1);
+			// free(args);
+			add_note(argc - 1, ++argv);
 		}
 	}
 	return 0;

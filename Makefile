@@ -33,7 +33,7 @@ pre-proc: $(SRC)
 	$(CC) $(CFLAGS) -E $(SRC) > bin/proc/pre-proc.i
 
 test:
-	echo $@
+	# @echo $(patsubst %,a_%.suffix,"name")
 
 clean:
 	rm $(OUT)

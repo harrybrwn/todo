@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h> // strcmp
+#include <string.h> // strcmp, strcpy, strlen
 
 #include "command.h"
 
@@ -24,7 +24,7 @@ void setRoot(CMD *top) {
 
 int parse(int len, char **args) {
 	for (int i = 1; i < len; i++) {
-		if (strcmp("--help", args[i]) == 0 || strcmp("help", args[i]) == 0) {
+		if ((strcmp("help", args[i]) == 0) || (strcmp("--help", args[i]) == 0)) {
 			help(_top);
 			return 1;
 		}
@@ -47,22 +47,22 @@ int parse(int len, char **args) {
 	return 0;
 }
 
+int maxOf(int n_strs, char** strs) {
+	int max = 0, l;
+	for (int i = 0; i < n_strs; i++) {
+		l = strlen(strs[i]);
+		if (l > max)
+			max = l;
+	}
+	return max;
+}
+
 void help(CMD top) {
 	int i = 0;
 	CMD *arg;
-	printf("Use:\n  %s [command]\n\n", top.use);
-	printf("Commands:\n");
-	// int max = 4;
-	// while (1) {
-	// 	arg = _commands[i];
-	// 	if (arg == NULL)
-	// 		break;
-	//
-	// 	int l = sizeof(arg->use);
-	// 	if (l > max)
-	// 		max = l;
-	// 	i++;
-	// }
+	printf("Use:\n  %s [option]\n\n", top.use);
+	printf("Option:\n");
+
 	i = 0;
 	while (1) {
 		arg = _commands[i];
@@ -84,14 +84,38 @@ void addCommand(CMD *cmd) {
 	}
 }
 
+static char* get_cmd_name(char* usage) {
+	int i, n = 0;
+	int length = strlen(usage);
+
+	for (i = 0; i < length+1; i++) {
+		if (usage[i] == ' ' || usage[i] == '\0') {
+			n = i;
+			break;
+		}
+	}
+
+	char* name = malloc(n + 1);
+	for (i = 0; i < n; i++)
+		name[i] = usage[i];
+
+	name[i] = '\0';
+	return name;
+}
+
 CMD *findCommand(char *name) {
 	for (int i = 0; i < _len; i++) {
 		if (_commands[i] == NULL) {
 			return NULL;
 		}
-		if (strcmp(_commands[i]->use, name) == 0) {
+
+		char* cname = get_cmd_name(_commands[i]->use);
+		// printf("find this: %s\n", cname);
+		if (strcmp(cname, name) == 0) {
+			free(cname);
 			return _commands[i];
 		}
+		free(cname);
 	}
 	return NULL;
 }
