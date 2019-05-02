@@ -5,9 +5,6 @@
 #include "command.h" // CMD, addCommand, setToplevel, parse
 #include "fileio.h"  // file_len, file_lines
 
-#define true 1
-#define false 0
-
 
 CMD todo = {
 	.use = "todo",
@@ -148,7 +145,7 @@ static void init() {
 int main(int argc, char *argv[]) {
 	init();
 
-	if (!parse(argc, argv)) {
+	if (!parse_opts(argc, argv)) {
 		if (argc == 1) {
 			print_todo();
 		} else {

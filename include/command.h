@@ -3,6 +3,14 @@
 
 #define _len 24
 
+#ifndef true
+#  define true 1
+#endif
+
+#ifndef false
+#  define false 0
+#endif
+
 typedef struct command {
 	char *use;
 	char *descr;
@@ -10,6 +18,8 @@ typedef struct command {
 	int hasargs;
 	int hidden;
 } CMD;
+
+int parse_opts(int, char**);
 
 void setRoot(CMD*);
 void addCommand(CMD*);

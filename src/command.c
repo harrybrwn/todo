@@ -30,28 +30,46 @@ void help() {
 	Usage(_top);
 }
 
-int parse(int len, char **args) {
-	for (int i = 1; i < len; i++) {
-		if ((strcmp("help", args[i]) == 0) || (strcmp("--help", args[i]) == 0)) {
+int parse(int argc, char **argv) {
+	for (int i = 1; i < argc; i++) {
+		if ((strcmp("help", argv[i]) == 0) || (strcmp("--help", argv[i]) == 0)) {
 			Usage(_top);
 			return 1;
 		}
 
-		CMD *current = findCommand(args[i]);
+		CMD *current = findCommand(argv[i]);
 		if (current == NULL) {
 			continue;
 		}
-		if ((len - i - 1) == 0 && current->hasargs) {
+		if ((argc - i - 1) == 0 && current->hasargs) {
 			printf("Error: no arguments to %s\n", current->use);
 			return 1;
 		}
 
-		char** cmd_args = getSlice(len, args, i + 1);
-		(*current).run(current, len - i - 1, cmd_args);
+		char** cmd_args = getSlice(argc, argv, i + 1);
+		(*current).run(current, argc - i - 1, cmd_args);
 		free(cmd_args);
 		return 1;
 	}
 	return 0;
+}
+
+int parse_opts(int argc, char** argv) {
+	if (argc == 1)
+		return false;
+
+	if ((strcmp("help", argv[1]) == 0) || (strcmp("--help", argv[1]) == 0)) {
+		Usage(_top);
+		return true;
+	}
+
+	CMD *cmd = findCommand(argv++[0]);
+	if (cmd == NULL) {
+		return false;
+	}
+
+	(*cmd).run(cmd, --argc, argv);
+	return true;
 }
 
 static int maxOfCMD(int n, CMD** cmds) {
@@ -126,7 +144,6 @@ CMD *findCommand(char *name) {
 		}
 
 		char* cname = get_cmd_name(_commands[i]->use);
-		// printf("find this: %s\n", cname);
 		if (strcmp(cname, name) == 0) {
 			free(cname);
 			return _commands[i];
