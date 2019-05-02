@@ -8,6 +8,7 @@ typedef struct command {
 	char *descr;
 	void (*run)(struct command *cmd, int, char** args);
 	int hasargs;
+	int hidden;
 } CMD;
 
 void setRoot(CMD*);
@@ -15,6 +16,5 @@ void addCommand(CMD*);
 CMD *findCommand(char*);
 int parse(int, char**);
 char** getSlice(int, char**, int);
-void help(CMD);
-
+void help();
 #endif

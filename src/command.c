@@ -6,7 +6,9 @@
 
 CMD _top;
 CMD *_commands[_len];
+int n_cmds = 0;
 
+// remember to deallocate this memory
 char** getSlice(int arrlen, char** arr, int start) {
 	// start is an index... hence the 'start - 1'
 	char** newarr = malloc((arrlen - start - 1) * sizeof(char*));
@@ -14,7 +16,7 @@ char** getSlice(int arrlen, char** arr, int start) {
 		newarr[i - start] = malloc(strlen(arr[i]) * sizeof(char));
 		newarr[i - start] = arr[i];
 	}
-	// remember to deallocate this memory
+
 	return newarr;
 }
 
@@ -22,10 +24,16 @@ void setRoot(CMD *top) {
 	_top = *top;
 }
 
+static void Usage(CMD);
+
+void help() {
+	Usage(_top);
+}
+
 int parse(int len, char **args) {
 	for (int i = 1; i < len; i++) {
 		if ((strcmp("help", args[i]) == 0) || (strcmp("--help", args[i]) == 0)) {
-			help(_top);
+			Usage(_top);
 			return 1;
 		}
 
@@ -43,42 +51,50 @@ int parse(int len, char **args) {
 		free(cmd_args);
 		return 1;
 	}
-	// help(_top);
 	return 0;
 }
 
-int maxOf(int n_strs, char** strs) {
+static int maxOfCMD(int n, CMD** cmds) {
 	int max = 0, l;
-	for (int i = 0; i < n_strs; i++) {
-		l = strlen(strs[i]);
+	for (int i = 0; i < n; i++) {
+		l = strlen(cmds[i]->use);
 		if (l > max)
 			max = l;
 	}
 	return max;
 }
 
-void help(CMD top) {
-	int i = 0;
-	CMD *arg;
-	printf("Use:\n  %s [option]\n\n", top.use);
-	printf("Option:\n");
+static char* spaces(int n) {
+	char* s = malloc(n);
+	for (int i = 0; i < n; i++)
+		s[i] = ' ';
+	return s;
+}
 
-	i = 0;
-	while (1) {
+static void Usage(CMD top) {
+	printf("Use:\n  %s [option]\n\n", top.use);
+	printf("Options:\n");
+
+	int max = maxOfCMD(n_cmds, _commands);
+	char* spacer = spaces(max + 1);
+
+	CMD *arg;
+	for (int i = 0; i < n_cmds; i++) {
 		arg = _commands[i];
-		if (arg == NULL) {
-			printf("  help    get help on a command\n");
-			return;
-		}
-		printf("  %s    %s\n", arg->use, arg->descr);
-		i++;
+		if (arg->hidden)
+			continue;
+
+		printf("  %s %.*s %s\n", arg->use, (int)(max - strlen(arg->use)), spacer, arg->descr);
 	}
+	printf("  help %.*s %s\n", max - 4, spacer, "get help on a command");
+	free(spacer);
 }
 
 void addCommand(CMD *cmd) {
 	for (int i = 0; i < _len; i++) {
 		if (_commands[i] == NULL) {
 			_commands[i] = cmd;
+			n_cmds++;
 			return;
 		}
 	}
