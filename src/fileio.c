@@ -49,7 +49,7 @@ int read(FILE *f, char** data) {
 	return i;
 }
 
-int readto(FILE *f, int end, char** data) {
+int readuntil(FILE *f, int end, char** data) {
 	int i;
 	char c;
 	for (i = 0; ftell(f) != end; i++) {
@@ -74,7 +74,7 @@ int readto_ch(FILE *f, char stp, char** data) {
 
 int read_range(FILE *f, int start, int end, char** data) {
 	fseek(f, start, SEEK_SET);
-	return readto(f, end, data);
+	return readuntil(f, end, data);
 }
 
 int readall(FILE *f, char** data) {

@@ -19,17 +19,14 @@ void print_todo() {
 		fclose(f);
 	}
 
-	int flen = file_len("./TODO");
-	if (flen == 1) {
+	if (file_len("./TODO") == 1) {
 		printf("your TODO is empty\n");
 		return;
 	}
 
 	char c;
-	while (c != EOF) {
-		c = fgetc(fpt);
+	while ((c = fgetc(fpt)) != EOF)
 		printf("%c", c);
-	}
 
 	fclose(fpt);
 }
@@ -105,11 +102,11 @@ CMD rm = {
 	.hasargs = true
 };
 
-void get_run(CMD *cmd, int argc, char** args) {
+void run_get(CMD *cmd, int argc, char** args) {
 	if (argc > 1) {
 		error("too many arguments");
 	}
-	FILE *fpt = fopen("./TODO", "a+");
+	FILE *fpt = fopen("./TODO", "r");
 
 	char *end;
 	fseek_line(fpt, strtoumax(args[0], &end, 10) - 1);
@@ -120,7 +117,7 @@ void get_run(CMD *cmd, int argc, char** args) {
 CMD get = {
 	.use = "get <line>",
 	.descr = "show the <n>th item on the list",
-	.run = get_run
+	.run = run_get
 };
 
 void run_delete(CMD *cmd, int argc, char** args) {

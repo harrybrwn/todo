@@ -16,7 +16,7 @@ void fseek_line(FILE*, int);
 void print_nextline(FILE*);
 
 int read(FILE*, char**);
-int readto(FILE*, int, char**);
+int readuntil(FILE*, int, char**);
 int read_range(FILE*, int, int, char**);
 int readall(FILE*, char**);
 
