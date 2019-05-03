@@ -4,9 +4,10 @@
 
 #include "command.h"
 
-CMD _top;
-CMD *_commands[_len];
-int n_cmds = 0;
+// static int MAX_N_CMDS = _len;
+static int n_cmds = 0;
+static CMD _top;
+static CMD *_commands[_len];
 
 // remember to deallocate this memory
 char** getSlice(int arrlen, char** arr, int start) {
@@ -25,6 +26,7 @@ void setRoot(CMD *top) {
 }
 
 static void Usage(CMD);
+static int isHelp(char*);
 
 void help() {
 	Usage(_top);
@@ -32,7 +34,7 @@ void help() {
 
 int parse(int argc, char **argv) {
 	for (int i = 1; i < argc; i++) {
-		if ((strcmp("help", argv[i]) == 0) || (strcmp("--help", argv[i]) == 0)) {
+		if (isHelp(argv[i])) {
 			Usage(_top);
 			return 1;
 		}
@@ -58,17 +60,19 @@ int parse_opts(int argc, char** argv) {
 	if (argc == 1)
 		return false;
 
-	if ((strcmp("help", argv[1]) == 0) || (strcmp("--help", argv[1]) == 0)) {
+	if (isHelp(argv[1])) {
 		Usage(_top);
 		return true;
 	}
 
-	CMD *cmd = findCommand(argv++[0]);
+	CMD *cmd = findCommand((++argv)[0]);
 	if (cmd == NULL) {
 		return false;
+	} else {
+		argc--;
 	}
 
-	(*cmd).run(cmd, --argc, argv);
+	(*cmd).run(cmd, --argc, ++argv);
 	return true;
 }
 
@@ -135,6 +139,13 @@ static char* get_cmd_name(char* usage) {
 
 	name[i] = '\0';
 	return name;
+}
+
+static int isHelp(char* name) {
+	if ((strcmp("help", name) == 0) || (strcmp("--help", name) == 0)) {
+		return 1;
+	}
+	return 0;
 }
 
 CMD *findCommand(char *name) {

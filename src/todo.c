@@ -38,35 +38,64 @@ void add_note(int argc, char** args) {
 	FILE *fpt = fopen("./TODO", "a+");
 	int flen = file_lines("./TODO");
 	fprintf(fpt, "%d. ", ++flen);
+
 	for (int i = 0; i < argc; i++) {
 		fprintf(fpt, "%s ", args[i]);
 	}
+
 	fprintf(fpt, "\n");
 	fclose(fpt);
 	print_todo();
 }
 
-void run_rm(CMD *cmd, int argc, char** args) {
-	if (argc > 1) {
-		printf("too many arguments\n");
-		exit(1);
+int fileLength(FILE *f) {
+	int len = 0;
+	char c = fgetc(f);
+	while (c != EOF) {
+		c = fgetc(f);
+		len++;
 	}
+	fseek(f, 0, SEEK_SET);
+	return len;
+}
 
-	FILE *fpt = fopen("./TODO", "w+");
+void error(const char* msg) {
+	printf("%s\n", msg);
+	exit(1);
+}
+
+int parse_int(char *str) {
 	char *end;
-	// printf("%d\n", strtoumax(args[0], &end, 10));
-	int line = strtoumax(args[0], &end, 10);
-	fseek_line(fpt, line);
+	return strtoumax(str, &end, 10);
+}
 
-	// fputs("line replacement", fpt);
-	// print_nextline(fpt);
-
-	// for (int i = 0; i < argc; i++) {
-	// 	// printf("removing '%s'...\n", args[i]);
-	//
-	// 	free(args[i]);
+void run_rm(CMD *cmd, int argc, char** argv) {
+	// if (argc > 1) {
+	// 	error("too many arguments");
 	// }
-	fclose(fpt);
+	// int line_no = parse_int(argv[0])
+	//
+	// FILE *fpt = fopen("./TODO", "r+");
+	// FileInfo* info_ptr = get_info(fpt);
+	// FileInfo info = *info_ptr;
+	// close_info(info_ptr);
+	//
+	// char *data = malloc(info.length);
+	//
+	// char c;
+	// int line = 1;
+	// while ((c = fgetc(fpt)) != EOF) {
+	// 	if (c == '\n') {
+	//
+	// 		line++;
+	// 	}
+	// 	// if (line == line_no)
+	// }
+	//
+	// free(data);
+
+	// fclose(fpt);
+	error("rm does not work yet");
 }
 
 CMD rm = {
@@ -78,13 +107,12 @@ CMD rm = {
 
 void get_run(CMD *cmd, int argc, char** args) {
 	if (argc > 1) {
-		printf("too many arguments\n");
-		exit(1);
+		error("too many arguments");
 	}
 	FILE *fpt = fopen("./TODO", "a+");
 
 	char *end;
-	fseek_line(fpt, strtoumax(args[0], &end, 10));
+	fseek_line(fpt, strtoumax(args[0], &end, 10) - 1);
 	print_nextline(fpt);
 	fclose(fpt);
 }
@@ -115,14 +143,20 @@ CMD del = {
 };
 
 void run_test(CMD *cmd, int argc, char** argv) {
-	printf("[");
-	for (int i = 0; i < argc; i++) {
-		if (i == argc - 1)
-			printf("%s", argv[i]);
-		else
-			printf("%s ", argv[i]);
+	FILE *fpt = fopen("./TODO", "r");
+
+	char *end;
+	fseek_line(fpt, strtoumax(argv[0], &end, 10) - 1);
+	char c;
+
+	while ((c = fgetc(fpt)) != EOF) {
+		if (c == '\n')
+			break;
+		printf("%c", c);
 	}
-	printf("]\n");
+
+	printf("\n");
+	fclose(fpt);
 }
 
 CMD test = {
@@ -135,10 +169,12 @@ CMD test = {
 static void init() {
 	setRoot(&todo);
 
+	// top level
 	addCommand(&rm);
 	addCommand(&del);
 	addCommand(&get);
 
+	// hidden
 	addCommand(&test);
 }
 
@@ -149,9 +185,7 @@ int main(int argc, char *argv[]) {
 		if (argc == 1) {
 			print_todo();
 		} else {
-			// char** args = getSlice(argc, argv, 1);
-			// free(args);
-			add_note(argc - 1, ++argv);
+			add_note(--argc, ++argv);
 		}
 	}
 	return 0;
