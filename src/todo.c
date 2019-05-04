@@ -5,6 +5,41 @@
 #include "command.h" // CMD, addCommand, setToplevel, parse
 #include "fileio.h"  // file_len, file_lines
 
+typedef struct _note {
+	int  line;
+	char *note;
+	int  length;
+	char *category;
+} Note;
+
+typedef struct {
+	FILE *stream;
+	Note *notes;
+	char *raw;
+	int  length;
+	int  lines;
+} TODO;
+
+TODO* todo_open(const char* fname, const char *mode) {
+	FILE *f = fopen(fname, mode);
+	FileInfo* info = get_info(f);
+
+	TODO todof = {
+		.stream = f,
+		.length = info->length,
+		.lines = info->lines
+	};
+
+	free(info);
+	TODO *t_ptr = malloc(sizeof(TODO*));
+	t_ptr = &todof;
+	return t_ptr;
+}
+
+void todo_close(TODO* todof) {
+	fclose(todof->stream);
+	free(todof);
+}
 
 CMD todo = {
 	.use = "todo",
@@ -17,6 +52,7 @@ void print_todo() {
 		printf("creating 'TODO' file\n");
 		FILE *f = fopen("./TODO", "w");
 		fclose(f);
+		return;
 	}
 
 	if (file_len("./TODO") == 1) {
@@ -46,6 +82,7 @@ void add_note(int argc, char** args) {
 }
 
 int fileLength(FILE *f) {
+	fseek(f, 0, SEEK_SET);
 	int len = 0;
 	char c = fgetc(f);
 	while (c != EOF) {
@@ -56,12 +93,12 @@ int fileLength(FILE *f) {
 	return len;
 }
 
-void error(const char* msg) {
+static void error(const char* msg) {
 	printf("%s\n", msg);
 	exit(1);
 }
 
-int parse_int(char *str) {
+static int parse_int(char *str) {
 	char *end;
 	return strtoumax(str, &end, 10);
 }
@@ -104,8 +141,11 @@ CMD rm = {
 
 void run_get(CMD *cmd, int argc, char** args) {
 	if (argc > 1) {
-		error("too many arguments");
+		error("Error: too many arguments");
+	} else if (argc < 1) {
+		error("Error: give line number");
 	}
+
 	FILE *fpt = fopen("./TODO", "r");
 
 	char *end;
@@ -125,8 +165,7 @@ void run_delete(CMD *cmd, int argc, char** args) {
 		free(args[i]);
 	}
 
-	int status = remove("./TODO");
-	if (status == 0)
+	if (remove("./TODO") == 0)
 		printf("deleted TODO.\n");
 	else
 		printf("cannot delete 'TODO' file\n");

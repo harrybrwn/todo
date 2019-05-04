@@ -88,8 +88,7 @@ static int maxOfCMD(int n, CMD** cmds) {
 
 static char* spaces(int n) {
 	char* s = malloc(n);
-	for (int i = 0; i < n; i++)
-		s[i] = ' ';
+	memset(s, ' ', n);
 	return s;
 }
 
