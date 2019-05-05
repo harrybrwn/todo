@@ -1,8 +1,9 @@
 #include <stdio.h>  // printf
 #include <stdlib.h>  // malloc, calloc, realloc
 #include <inttypes.h> // strtoumax, strtoimax
+#include <string.h> // strcmp, strcpy, strlen
 
-#include "command.h" // CMD, addCommand, setToplevel, parse
+#include "command.h" // CMD, addCommand, setToplevel, parse_opts
 #include "fileio.h"  // file_len, file_lines
 
 typedef struct _note {
@@ -22,49 +23,51 @@ typedef struct {
 
 TODO* todo_open(const char* fname, const char *mode) {
 	FILE *f = fopen(fname, mode);
-	FileInfo* info = get_info(f);
 
-	TODO todof = {
-		.stream = f,
-		.length = info->length,
-		.lines = info->lines
-	};
+	TODO *todof = malloc(sizeof(TODO));
+	todof->stream = f;
 
-	free(info);
-	TODO *t_ptr = malloc(sizeof(TODO*));
-	t_ptr = &todof;
-	return t_ptr;
+	if ((strcmp("r", mode) == 0) || (strcmp("r+", mode) == 0)) {
+		FileInfo* info = get_info(f);
+		todof->length = info->length;
+		todof->lines = info->lines;
+		free(info);
+	}
+
+	return todof;
 }
 
-void todo_close(TODO* todof) {
-	fclose(todof->stream);
-	free(todof);
+void todo_close(TODO** todof) {
+	fclose((*todof)->stream);
+	free(*todof);
+	(*todof) = NULL;
 }
 
-CMD todo = {
+static CMD todo = {
 	.use = "todo",
 	.descr = "write down your todo list.",
 };
 
 void print_todo() {
-	FILE *fpt = fopen("./TODO", "r");
-	if (fpt == NULL) {
+	TODO *todof = todo_open("./TODO", "r");
+
+	if (todof->stream == NULL) {
 		printf("creating 'TODO' file\n");
 		FILE *f = fopen("./TODO", "w");
 		fclose(f);
 		return;
 	}
 
-	if (file_len("./TODO") == 1) {
+	if (todof->length == 1) {
 		printf("your TODO is empty\n");
 		return;
 	}
 
 	char c;
-	while ((c = fgetc(fpt)) != EOF)
+	while ((c = fgetc(todof->stream)) != EOF)
 		printf("%c", c);
 
-	fclose(fpt);
+	todo_close(&todof);
 }
 
 void add_note(int argc, char** args) {
@@ -72,9 +75,8 @@ void add_note(int argc, char** args) {
 	int flen = file_lines("./TODO");
 	fprintf(fpt, "%d. ", ++flen);
 
-	for (int i = 0; i < argc; i++) {
+	for (int i = 0; i < argc; i++)
 		fprintf(fpt, "%s ", args[i]);
-	}
 
 	fprintf(fpt, "\n");
 	fclose(fpt);
@@ -98,7 +100,7 @@ static void error(const char* msg) {
 	exit(1);
 }
 
-static int parse_int(char *str) {
+int parse_int(char *str) {
 	char *end;
 	return strtoumax(str, &end, 10);
 }
@@ -132,7 +134,7 @@ void run_rm(CMD *cmd, int argc, char** argv) {
 	error("rm does not work yet");
 }
 
-CMD rm = {
+static CMD rm = {
 	.use = "rm <line>",
 	.descr = "remove an item from the list",
 	.run = run_rm,
@@ -154,7 +156,7 @@ void run_get(CMD *cmd, int argc, char** args) {
 	fclose(fpt);
 }
 
-CMD get = {
+static CMD get = {
 	.use = "get <line>",
 	.descr = "show the <n>th item on the list",
 	.run = run_get
@@ -171,7 +173,7 @@ void run_delete(CMD *cmd, int argc, char** args) {
 		printf("cannot delete 'TODO' file\n");
 }
 
-CMD del = {
+static CMD del = {
 	.use = "del",
 	.descr = "delete the current TODO file",
 	.run = run_delete,
@@ -195,7 +197,7 @@ void run_test(CMD *cmd, int argc, char** argv) {
 	fclose(fpt);
 }
 
-CMD test = {
+static CMD test = {
 	.use = "test",
 	.descr = "developer testing option",
 	.run = run_test,

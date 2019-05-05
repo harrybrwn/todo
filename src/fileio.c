@@ -6,20 +6,17 @@
 FileInfo* get_info(FILE* f) {
 	fseek(f, 0, SEEK_SET);
 
-	FileInfo file_info = { .lines = 0, .length = 0 };
+	FileInfo *file_info = malloc(sizeof(FileInfo));
 	char c;
 	while (c != EOF) {
 		c = fgetc(f);
-		file_info.length++;
+		file_info->length++;
 		if (c == '\n')
-			file_info.lines++;
+			file_info->lines++;
 	}
 
-	FileInfo* info_ptr = malloc(sizeof(FileInfo*));
-	info_ptr = &file_info;
-
 	fseek(f, 0, SEEK_SET);
-	return info_ptr;
+	return file_info;
 }
 
 FileInfo* file_info(const char* filename) {
