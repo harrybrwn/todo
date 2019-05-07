@@ -8,13 +8,15 @@ FileInfo* get_info(FILE* f) {
 
 	FileInfo *file_info = malloc(sizeof(FileInfo));
 	char c;
+	file_info->length = 0;
+	file_info->lines = 0;
+
 	while (c != EOF) {
 		c = fgetc(f);
 		file_info->length++;
 		if (c == '\n')
 			file_info->lines++;
 	}
-
 	fseek(f, 0, SEEK_SET);
 	return file_info;
 }

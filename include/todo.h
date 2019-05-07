@@ -10,13 +10,19 @@ typedef struct _note {
 
 typedef struct {
 	FILE *stream;
-	Note *notes;
+	Note **notes;
 	char *raw;
 	int  length;
 	int  lines;
 } TODO;
 
-TODO* open_todo(const char* fname, const char *mode);
-void close_todo(TODO** todof);
+TODO* open_todo(const char*e, const char*);
+void write_todo(TODO*);
+void close_todo(TODO**);
+
+Note* new_note(int, char*, char*);
+void write_note(Note*, FILE*);
+Note* read_note(FILE*);
+void close_note(Note**);
 
 #endif

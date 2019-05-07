@@ -1,6 +1,7 @@
 #include <stdio.h>  // printf
 #include <stdlib.h>
 #include <inttypes.h> // strtoumax, strtoimax
+#include <string.h>
 
 #include "command.h" // CMD, addCommand, setToplevel, parse_opts
 #include "fileio.h"  // file_len, file_lines
@@ -26,24 +27,34 @@ static void print_todo() {
 		return;
 	}
 
-	char c;
-	while ((c = fgetc(todof->stream)) != EOF)
-		printf("%c", c);
+	for (int i = 0; i < todof->lines; i++)
+		printf("%d. %s\n", todof->notes[i]->line, todof->notes[i]->note);
 
 	close_todo(&todof);
 }
 
 static void add_note(int argc, char** args) {
-	FILE *fpt = fopen("./TODO", "a+");
-	int flen = file_lines("./TODO");
-	fprintf(fpt, "%d. ", ++flen);
+	TODO* todof = open_todo("./TODO", "r+");
 
-	for (int i = 0; i < argc; i++)
-		fprintf(fpt, "%s ", args[i]);
+	int buf_size = 32;
+	char* buf = malloc(buf_size);
 
-	fprintf(fpt, "\n");
-	fclose(fpt);
-	print_todo();
+	for (int i = 0; i < argc; i++) {
+		if (strlen(buf) >= buf_size - 1) {
+			buf_size += 16;
+			buf = realloc(buf, buf_size);
+		}
+		strcat(buf, args[i]);
+
+		if (i != argc - 1)
+			strcat(buf, " ");
+	}
+
+	Note* n = new_note(todof->lines + 1, buf, NULL);
+
+	write_note(n, todof->stream);
+	close_todo(&todof);
+	close_note(&n);
 }
 
 static void error(const char* msg) {
@@ -99,11 +110,10 @@ static void run_get(CMD *cmd, int argc, char** args) {
 		error("Error: give line number");
 	}
 
-	FILE *fpt = fopen("./TODO", "r");
+	TODO* todof = open_todo("./TODO", "r");
 
-	fseek_line(fpt, parse_int(args[0]) - 1);
-	print_nextline(fpt);
-	fclose(fpt);
+	printf("%s\n", todof->notes[parse_int(args[0]) - 1]->note);
+	close_todo(&todof);
 }
 
 static CMD get = {
@@ -131,20 +141,15 @@ static CMD del = {
 };
 
 static void run_test(CMD *cmd, int argc, char** argv) {
-	FILE *fpt = fopen("./TODO", "r");
+	TODO *todof = open_todo("./TODO", "r");
+	todof->notes = malloc(todof->lines * sizeof(Note*));
 
-	char *end;
-	fseek_line(fpt, strtoumax(argv[0], &end, 10) - 1);
-	char c;
-
-	while ((c = fgetc(fpt)) != EOF) {
-		if (c == '\n')
-			break;
-		printf("%c", c);
+	for (int i = 0; i < todof->lines; i++) {
+		todof->notes[i] = read_note(todof->stream);
+		printf("note #%d (%d bytes long): %s\n", todof->notes[i]->line, todof->notes[i]->length, todof->notes[i]->note);
 	}
 
-	printf("\n");
-	fclose(fpt);
+	close_todo(&todof);
 }
 
 static CMD test = {
@@ -157,7 +162,6 @@ static CMD test = {
 static void init() {
 	setRoot(&todo);
 
-	// top level
 	addCommand(&rm);
 	addCommand(&del);
 	addCommand(&get);
