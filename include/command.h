@@ -20,12 +20,9 @@ typedef struct command {
 } CMD;
 
 int parse_opts(int, char**);
-
 void setRoot(CMD*);
 void addCommand(CMD*);
 CMD *findCommand(char*);
-int parse(int, char**);
-char** getSlice(int, char**, int);
 void help();
 
 #endif

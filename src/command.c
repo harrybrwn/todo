@@ -9,18 +9,6 @@ static int n_cmds = 0;
 static CMD _top;
 static CMD *_commands[_len];
 
-// remember to deallocate this memory
-char** getSlice(int arrlen, char** arr, int start) {
-	// start is an index... hence the 'start - 1'
-	char** newarr = malloc((arrlen - start - 1) * sizeof(char*));
-	for (int i = start; i < arrlen; i++) {
-		newarr[i - start] = malloc(strlen(arr[i]) * sizeof(char));
-		newarr[i - start] = arr[i];
-	}
-
-	return newarr;
-}
-
 void setRoot(CMD *top) {
 	_top = *top;
 }
@@ -30,30 +18,6 @@ static int isHelp(char*);
 
 void help() {
 	Usage(_top);
-}
-
-int parse(int argc, char **argv) {
-	for (int i = 1; i < argc; i++) {
-		if (isHelp(argv[i])) {
-			Usage(_top);
-			return 1;
-		}
-
-		CMD *current = findCommand(argv[i]);
-		if (current == NULL) {
-			continue;
-		}
-		if ((argc - i - 1) == 0 && current->hasargs) {
-			printf("Error: no arguments to %s\n", current->use);
-			return 1;
-		}
-
-		char** cmd_args = getSlice(argc, argv, i + 1);
-		(*current).run(current, argc - i - 1, cmd_args);
-		free(cmd_args);
-		return 1;
-	}
-	return 0;
 }
 
 int parse_opts(int argc, char** argv) {

@@ -1,13 +1,13 @@
 # Dirs
 OUT=bin/todo
-INC=include
+INCLUDE=include
 SRC_DIR=src
 OBJ_DIR=bin/obj
 ASM_DIR=bin/asm
 
 # Compiler
 CC=gcc
-CFLAGS=-Wall -Werror -g -iquote $(INC) -std=c99
+CFLAGS=-Wall -Werror -g -iquote $(INCLUDE) -std=c99
 
 # Files
 NAMES=todo command fileio main
