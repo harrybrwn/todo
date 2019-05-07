@@ -68,32 +68,20 @@ static int parse_int(char *str) {
 }
 
 static void run_rm(CMD *cmd, int argc, char** argv) {
-	// if (argc > 1) {
-	// 	error("too many arguments");
-	// }
-	// int line_no = parse_int(argv[0])
-	//
-	// FILE *fpt = fopen("./TODO", "r+");
-	// FileInfo* info_ptr = get_info(fpt);
-	// FileInfo info = *info_ptr;
-	// close_info(info_ptr);
-	//
-	// char *data = malloc(info.length);
-	//
-	// char c;
-	// int line = 1;
-	// while ((c = fgetc(fpt)) != EOF) {
-	// 	if (c == '\n') {
-	//
-	// 		line++;
-	// 	}
-	// 	// if (line == line_no)
-	// }
-	//
-	// free(data);
+	if (argc > 1) {
+		error("too many arguments");
+	}
 
-	// fclose(fpt);
-	error("rm does not work yet");
+	TODO* todof = open_todo("./TODO", "r+");
+	int line_index = parse_int(argv[0]) - 1;
+	todof->notes[line_index] = NULL;
+	fclose(todof->stream);
+	todof->stream = fopen("./TODO", "w+");
+
+	write_todo(todof);
+	close_todo(&todof);
+
+	print_todo();
 }
 
 static CMD rm = {
@@ -112,7 +100,14 @@ static void run_get(CMD *cmd, int argc, char** args) {
 
 	TODO* todof = open_todo("./TODO", "r");
 
-	printf("%s\n", todof->notes[parse_int(args[0]) - 1]->note);
+	int index = parse_int(args[0]);
+	if (index <= 0)
+		error("Error: please give a line number");
+	else if (index > todof->lines)
+		error("Error: todo list isn't that long");
+
+	printf("line %d:\n", index);
+	printf("\t%s\n", todof->notes[index - 1]->note);
 	close_todo(&todof);
 }
 

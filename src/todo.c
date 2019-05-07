@@ -26,7 +26,7 @@ static int isInt(char x) {
 TODO* open_todo(const char* fname, const char *mode) {
 	FILE *f = fopen(fname, mode);
 	if (f == NULL) {
-		FILE *newf = fopen(fname, "w");
+		FILE *newf = fopen(fname, "w+");
 		fclose(newf);
 		f = fopen(fname, mode);
 	}
@@ -87,9 +87,15 @@ void write_note(Note *note, FILE *file) {
 }
 
 void write_todo(TODO *todo) {
+	int count = 0;
+
 	for (int i = 0; i < todo->lines; i++) {
-		if (todo->notes[i] == NULL)
+		if (todo->notes[i] == NULL) {
+			todo->lines--;
 			continue;
+		}
+
+		todo->notes[i]->line = ++count;
 		write_note(todo->notes[i], todo->stream);
 	}
 }
