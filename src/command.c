@@ -14,10 +14,16 @@ void setRoot(CMD *top) {
 }
 
 static void Usage(CMD);
-static int isHelp(char*);
 
 void help() {
 	Usage(_top);
+}
+
+static int isHelp(char* name) {
+	if ((strcmp("help", name) == 0) || (strcmp("--help", name) == 0)) {
+		return 1;
+	}
+	return 0;
 }
 
 int parse_opts(int argc, char** argv) {
@@ -71,18 +77,9 @@ static void Usage(CMD top) {
 
 		printf("  %s %.*s %s\n", arg->use, (int)(max - strlen(arg->use)), spacer, arg->descr);
 	}
-	printf("  help %.*s %s\n", max - 4, spacer, "get help on a command");
+	printf("\nFlags:\n");
+	printf("  --help   get help on a command\n");
 	free(spacer);
-}
-
-void addCommand(CMD *cmd) {
-	for (int i = 0; i < _len; i++) {
-		if (_commands[i] == NULL) {
-			_commands[i] = cmd;
-			n_cmds++;
-			return;
-		}
-	}
 }
 
 static char* get_cmd_name(char* usage) {
@@ -98,10 +95,27 @@ static char* get_cmd_name(char* usage) {
 
 	char* name = malloc(n + 1);
 	for (i = 0; i < n; i++)
-		name[i] = usage[i];
+	name[i] = usage[i];
 
 	name[i] = '\0';
 	return name;
+}
+
+static void init_cmd(CMD* cmd) {
+	cmd->_cmd_name = get_cmd_name(cmd->use);
+}
+
+void addCommand(CMD *cmd) {
+	for (int i = 0; i < _len; i++) {
+
+		// find the first empty CMD
+		if (_commands[i] == NULL) {
+			init_cmd(cmd);
+			_commands[i] = cmd;
+			n_cmds++;
+			return;
+		}
+	}
 }
 
 static int isHelp(char* name) {
@@ -117,12 +131,12 @@ CMD *findCommand(char *name) {
 			return NULL;
 		}
 
-		char* cname = get_cmd_name(_commands[i]->use);
-		if (strcmp(cname, name) == 0) {
-			free(cname);
+		// char* cname = get_cmd_name(_commands[i]->use);
+		if (strcmp(_commands[i]->_cmd_name, name) == 0) {
+			// free(cname);
 			return _commands[i];
 		}
-		free(cname);
+		// free(cname);
 	}
 	return NULL;
 }

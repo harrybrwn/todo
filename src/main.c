@@ -77,7 +77,7 @@ static void run_rm(CMD *cmd, int argc, char** argv) {
 }
 
 static CMD rm = {
-	.use = "rm <line>",
+	.use = "rm    <line>",
 	.descr = "remove an item from the list",
 	.run = run_rm,
 	.hasargs = true
@@ -136,9 +136,10 @@ static void run_get(CMD *cmd, int argc, char** args) {
 }
 
 static CMD get = {
-	.use = "get <line>",
+	.use = "get   <line>",
 	.descr = "show the <n>th item on the list",
-	.run = run_get
+	.run = run_get,
+	.hasargs = true
 };
 
 static void run_delete(CMD *cmd, int argc, char** args) {
