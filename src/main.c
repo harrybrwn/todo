@@ -39,7 +39,6 @@ static void add_note(int argc, char** args) {
 	bufputc(buf, '\0');
 
 	Note* n = new_note(todof->lines + 1, buf->data, NULL);
-	close_buffer(buf);
 
 	write_note(n, todof->stream);
 	close_todo(&todof);
@@ -103,13 +102,8 @@ void run_check(CMD* cmd, int argc, char** argv) {
 		bufputc(buf, '-');
 		bufputc(buf, todof->notes[line_index]->note[i]);
 	}
-	// todof->notes[line_index]->note = realloc(
-	// 	todof->notes[line_index]->note,
-	// 	strlen(buf->data)
-	// );
-
 	todof->notes[line_index]->note = buf->data;
-	close_buffer(buf);
+
 	print_todo(todof);
 	write_todo(todof);
 }
