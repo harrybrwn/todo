@@ -18,6 +18,7 @@ typedef struct {
 
 TODO* open_todo(const char*e, const char*);
 void write_todo(TODO*);
+void print_todo(TODO*);
 void close_todo(TODO**);
 
 Note* new_note(int, char*, char*);

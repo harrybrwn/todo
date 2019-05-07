@@ -12,7 +12,7 @@ static CMD todo = {
 	.descr = "write down your todo list.",
 };
 
-static void print_todo() {
+static void show_todo() {
 	TODO *todof = open_todo("./TODO", "r");
 
 	if (todof->stream == NULL) {
@@ -22,14 +22,7 @@ static void print_todo() {
 		return;
 	}
 
-	if (todof->length == 1) {
-		printf("your TODO is empty\n");
-		return;
-	}
-
-	for (int i = 0; i < todof->lines; i++)
-		printf("%d. %s\n", todof->notes[i]->line, todof->notes[i]->note);
-
+	print_todo(todof);
 	close_todo(&todof);
 }
 
@@ -70,18 +63,26 @@ static int parse_int(char *str) {
 static void run_rm(CMD *cmd, int argc, char** argv) {
 	if (argc > 1) {
 		error("too many arguments");
+	} else if (argc < 1) {
+		error("Error: must give note number");
 	}
 
 	TODO* todof = open_todo("./TODO", "r+");
 	int line_index = parse_int(argv[0]) - 1;
+	printf("line-index: %d, todo-lines: %d\n", line_index, todof->lines);
+	if (line_index > todof->lines)
+		error("Error: todo file is not that long");
+
 	todof->notes[line_index] = NULL;
 	fclose(todof->stream);
-	todof->stream = fopen("./TODO", "w+");
 
+	todof->stream = fopen("./TODO", "w+");
+	if (todof->length == 1)
+		todof->length = 2;
+
+	print_todo(todof);
 	write_todo(todof);
 	close_todo(&todof);
-
-	print_todo();
 }
 
 static CMD rm = {
@@ -118,9 +119,8 @@ static CMD get = {
 };
 
 static void run_delete(CMD *cmd, int argc, char** args) {
-	for (int i = 0; i < argc; i++) {
+	for (int i = 0; i < argc; i++)
 		free(args[i]);
-	}
 
 	if (remove("./TODO") == 0)
 		printf("deleted TODO.\n");
@@ -170,7 +170,7 @@ int main(int argc, char *argv[]) {
 
 	if (!parse_opts(argc, argv)) {
 		if (argc == 1) {
-			print_todo();
+			show_todo();
 		} else {
 			add_note(--argc, ++argv);
 		}

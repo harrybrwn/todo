@@ -54,13 +54,26 @@ TODO* open_todo(const char* fname, const char *mode) {
 	return todo;
 }
 
+void print_todo(TODO* todo) {
+	if (todo->length == 1) {
+		printf("your TODO is empty\n");
+		return;
+	}
+
+	int count = 0;
+	for (int i = 0; i < todo->lines; i++) {
+		if (todo->notes[i] == NULL)
+			continue;
+		printf("%d. %s\n", ++count, todo->notes[i]->note);
+	}
+}
+
 void close_note(Note** n) {
 	if (*n == NULL)
 		return;
 
-	// if ((*n)->category != NULL)
-	// 	free((*n)->category);
-
+	if ((*n)->category != NULL)
+		free((*n)->category);
 
 	free((*n)->note);
 	(*n)->note = NULL;
@@ -91,10 +104,9 @@ void write_todo(TODO *todo) {
 
 	for (int i = 0; i < todo->lines; i++) {
 		if (todo->notes[i] == NULL) {
-			todo->lines--;
+			// todo->lines--;
 			continue;
 		}
-
 		todo->notes[i]->line = ++count;
 		write_note(todo->notes[i], todo->stream);
 	}
