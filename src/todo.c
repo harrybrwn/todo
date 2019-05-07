@@ -3,7 +3,7 @@
 #include <string.h> // strcmp, strcpy, strlen
 #include <inttypes.h>
 
-#include "fileio.h"  // file_len, file_lines
+#include "util/fileio.h"  // file_len, file_lines
 #include "todo.h"
 
 

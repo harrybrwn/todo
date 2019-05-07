@@ -10,8 +10,10 @@ typedef struct _buffer {
 
 Buffer* new_buffer();
 void close_buffer(Buffer*);
+
 void bufputc(Buffer*, char);
-int putb(Buffer*, char*);
+int bufputs(Buffer*, const char*);
+
 void growb(Buffer*, int);
 int freadb(Buffer*, FILE*);
 

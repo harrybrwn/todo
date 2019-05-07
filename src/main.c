@@ -3,9 +3,9 @@
 #include <inttypes.h> // strtoumax, strtoimax
 #include <string.h>
 
-#include "command.h" // CMD, addCommand, setToplevel, parse_opts
-#include "fileio.h"  // file_len, file_lines
-#include "io.h"
+#include "command.h"
+#include "util/fileio.h"
+#include "util/io.h"
 #include "todo.h"
 
 static CMD todo = {
@@ -29,22 +29,17 @@ static void show_todo() {
 
 static void add_note(int argc, char** args) {
 	TODO* todof = open_todo("./TODO", "r+");
-
-	int buf_size = 32;
-	char* buf = malloc(buf_size);
+	Buffer* buf = new_buffer(32);
 
 	for (int i = 0; i < argc; i++) {
-		if (strlen(buf) >= buf_size - 1) {
-			buf_size += 16;
-			buf = realloc(buf, buf_size);
-		}
-		strcat(buf, args[i]);
-
+		bufputs(buf, args[i]);
 		if (i != argc - 1)
-			strcat(buf, " ");
+			bufputc(buf, ' ');
 	}
+	bufputc(buf, '\0');
 
-	Note* n = new_note(todof->lines + 1, buf, NULL);
+	Note* n = new_note(todof->lines + 1, buf->data, NULL);
+	close_buffer(buf);
 
 	write_note(n, todof->stream);
 	close_todo(&todof);
@@ -101,15 +96,20 @@ void run_check(CMD* cmd, int argc, char** argv) {
 	if (line_index > todof->lines)
 		error("Error: todo file is not that long");
 
-	Buffer* buf = new_buffer();
+	Buffer* buf = new_buffer(32);
 
 	int len = strlen(todof->notes[line_index]->note);
 	for (int i = 0; i < len; i++) {
 		bufputc(buf, '-');
 		bufputc(buf, todof->notes[line_index]->note[i]);
 	}
+	// todof->notes[line_index]->note = realloc(
+	// 	todof->notes[line_index]->note,
+	// 	strlen(buf->data)
+	// );
 
 	todof->notes[line_index]->note = buf->data;
+	close_buffer(buf);
 	print_todo(todof);
 	write_todo(todof);
 }

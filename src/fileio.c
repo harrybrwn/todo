@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "fileio.h"
+#include "util/fileio.h"
 
 FileInfo* get_info(FILE* f) {
 	fseek(f, 0, SEEK_SET);
