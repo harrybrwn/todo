@@ -5,6 +5,7 @@
 
 #include "command.h" // CMD, addCommand, setToplevel, parse_opts
 #include "fileio.h"  // file_len, file_lines
+#include "io.h"
 #include "todo.h"
 
 static CMD todo = {
@@ -69,14 +70,10 @@ static void run_rm(CMD *cmd, int argc, char** argv) {
 
 	TODO* todof = open_todo("./TODO", "r+");
 	int line_index = parse_int(argv[0]) - 1;
-	printf("line-index: %d, todo-lines: %d\n", line_index, todof->lines);
 	if (line_index > todof->lines)
 		error("Error: todo file is not that long");
 
 	todof->notes[line_index] = NULL;
-	fclose(todof->stream);
-
-	todof->stream = fopen("./TODO", "w+");
 	if (todof->length == 1)
 		todof->length = 2;
 
@@ -89,6 +86,38 @@ static CMD rm = {
 	.use = "rm <line>",
 	.descr = "remove an item from the list",
 	.run = run_rm,
+	.hasargs = true
+};
+
+void run_check(CMD* cmd, int argc, char** argv) {
+	if (argc > 1) {
+		error("too many arguments");
+	} else if (argc < 1) {
+		error("Error: must give note number");
+	}
+
+	TODO* todof = open_todo("./TODO", "r+");
+	int line_index = parse_int(argv[0]) - 1;
+	if (line_index > todof->lines)
+		error("Error: todo file is not that long");
+
+	Buffer* buf = new_buffer();
+
+	int len = strlen(todof->notes[line_index]->note);
+	for (int i = 0; i < len; i++) {
+		bufputc(buf, '-');
+		bufputc(buf, todof->notes[line_index]->note[i]);
+	}
+
+	todof->notes[line_index]->note = buf->data;
+	print_todo(todof);
+	write_todo(todof);
+}
+
+static CMD check = {
+	.use = "check <line>",
+	.descr = "check items off the list",
+	.run = run_check,
 	.hasargs = true
 };
 
@@ -136,15 +165,9 @@ static CMD del = {
 };
 
 static void run_test(CMD *cmd, int argc, char** argv) {
-	TODO *todof = open_todo("./TODO", "r");
-	todof->notes = malloc(todof->lines * sizeof(Note*));
-
-	for (int i = 0; i < todof->lines; i++) {
-		todof->notes[i] = read_note(todof->stream);
-		printf("note #%d (%d bytes long): %s\n", todof->notes[i]->line, todof->notes[i]->length, todof->notes[i]->note);
-	}
-
-	close_todo(&todof);
+	int a = 97;
+	for (int i = 0; i < 300; i++)
+		printf("%d: %c\n", a+i, a+i);
 }
 
 static CMD test = {
@@ -160,6 +183,7 @@ static void init() {
 	addCommand(&rm);
 	addCommand(&del);
 	addCommand(&get);
+	addCommand(&check);
 
 	// hidden
 	addCommand(&test);

@@ -32,7 +32,9 @@ TODO* open_todo(const char* fname, const char *mode) {
 	}
 
 	TODO *todo = malloc(sizeof(TODO));
+	todo->filename = fname;
 	todo->stream = f;
+
 	if (
 		(strcmp("w", mode) == 0)  ||
 		(strcmp("w+", mode) == 0) ||
@@ -64,6 +66,7 @@ void print_todo(TODO* todo) {
 	for (int i = 0; i < todo->lines; i++) {
 		if (todo->notes[i] == NULL)
 			continue;
+
 		printf("%d. %s\n", ++count, todo->notes[i]->note);
 	}
 }
@@ -100,16 +103,17 @@ void write_note(Note *note, FILE *file) {
 }
 
 void write_todo(TODO *todo) {
-	int count = 0;
+	FILE* fp = fopen(todo->filename, "w+");
 
+	int count = 0;
 	for (int i = 0; i < todo->lines; i++) {
 		if (todo->notes[i] == NULL) {
-			// todo->lines--;
 			continue;
 		}
 		todo->notes[i]->line = ++count;
-		write_note(todo->notes[i], todo->stream);
+		write_note(todo->notes[i], fp);
 	}
+	fclose(fp);
 }
 
 Note* new_note(int lineno, char* data, char* category) {
@@ -124,8 +128,8 @@ Note* new_note(int lineno, char* data, char* category) {
 Note* read_note(FILE *file) {
 	Note *note = malloc(sizeof(Note));
 	char num[3];
-
 	char c;
+
 	for (int i = 0; (c = fgetc(file)) != '.'; i++) {
 		if (c == EOF)
 			return NULL;
@@ -156,6 +160,7 @@ Note* read_note(FILE *file) {
 
 		note->note[note->length++] = c;
 	}
+	note->note[note->length] = '\0';
 
 	return note;
 }

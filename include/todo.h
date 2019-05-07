@@ -14,6 +14,7 @@ typedef struct {
 	char *raw;
 	int  length;
 	int  lines;
+	const char *filename;
 } TODO;
 
 TODO* open_todo(const char*e, const char*);

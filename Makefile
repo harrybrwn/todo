@@ -10,7 +10,7 @@ CC=gcc
 CFLAGS=-Wall -Werror -g -iquote $(INCLUDE) -std=c99
 
 # Files
-NAMES=todo command fileio main
+NAMES=todo command fileio io main
 SRC=$(patsubst %,$(SRC_DIR)/%.c,$(NAMES))
 OBJ=$(patsubst %,$(OBJ_DIR)/%.o,$(NAMES))
 ASM=$(patsubst %,$(ASM_DIR)/%.s,$(NAMES))
