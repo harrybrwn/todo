@@ -18,31 +18,28 @@ OBJ=$(NAMES:%=$(OBJ_DIR)/%.o)
 ASM=$(patsubst %,$(ASM_DIR)/%.s,$(NAMES))
 
 
-$(OUT): setup $(OBJ)
+$(OUT): $(SRC) $(OBJ)
 	$(CC) -o $@ $(CFLAGS) $(OBJ)
 
 %.o: $(SRC)
-	$(CC) $(CFLAGS) -c $^
+	$(CC) $(CFLAGS) -c $(SRC)
 	@for file in $(NAMES:%=%.o); do mv `basename $$file` $(OBJ_DIR)/$$file; done
-
-%.c: setup
 
 asm: $(SRC)
 	$(CC) $(CFLAGS) -S $(SRC)
 	@for file in $(NAMES:%=%.s); do mv `basename $$file` $(ASM_DIR)/$$file; done
 
-pre-proc: $(SRC)
+bin/proc/pre-proc.i: $(SRC)
 	@if [ ! -d "bin/proc" ]; then \
 		mkdir bin/proc ;\
 	fi
-	$(CC) $(CFLAGS) -E $(SRC) > bin/proc/pre-proc.i
+	$(CC) $(CFLAGS) -E $(SRC) > $@ # bin/proc/pre-proc.i
 
 clean:
-	@if [ -d $(OBJ_DIR) ]; then rm -rf $(OBJ_DIR); fi
-	@if [ -d $(ASM_DIR) ]; then rm -rf $(ASM_DIR); fi
-	@if [ -d bin/proc ]; then rm -rf bin/proc; fi
+	@for file in `find . -name *.o`; do rm $$file; done
+	@for file in `find . -name *.s`; do rm $$file; done
+	@for file in `find . -name *.uncrustify`; do rm $$file; done
 	@if [ -x $(OUT) ]; then rm $(OUT); fi
-	rm `find . -name *.uncrustify`
 
 setup:
 	@if [ ! -d "$(OBJ_DIR)/util" ]; then mkdir $(OBJ_DIR)/util -p; fi
@@ -58,6 +55,6 @@ fmt:
 test:
 	$(LINT)
 
-all: setup asm pre-proc bin/todo
+all: setup asm bin/proc/pre-proc.i bin/todo
 
 .PHONY: setup clean obj asm all pre-proc test fmt
