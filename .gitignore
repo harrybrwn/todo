@@ -10,6 +10,7 @@ bin/todo
 
 # Tests
 test*
+*.cfg
 
 # Notes
 *.txt

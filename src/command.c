@@ -95,7 +95,7 @@ static char* get_cmd_name(char* usage) {
 
 	char* name = malloc(n + 1);
 	for (i = 0; i < n; i++)
-	name[i] = usage[i];
+		name[i] = usage[i];
 
 	name[i] = '\0';
 	return name;
@@ -116,13 +116,6 @@ void addCommand(CMD *cmd) {
 			return;
 		}
 	}
-}
-
-static int isHelp(char* name) {
-	if ((strcmp("help", name) == 0) || (strcmp("--help", name) == 0)) {
-		return 1;
-	}
-	return 0;
 }
 
 CMD *findCommand(char *name) {

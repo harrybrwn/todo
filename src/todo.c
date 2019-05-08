@@ -6,20 +6,19 @@
 #include "util/fileio.h"  // file_len, file_lines
 #include "todo.h"
 
-
 static int isInt(char x) {
 	switch (x) {
-		case '0': return 1;
-		case '1': return 1;
-		case '2': return 1;
-		case '3': return 1;
-		case '4': return 1;
-		case '5': return 1;
-		case '6': return 1;
-		case '7': return 1;
-		case '8': return 1;
-		case '9': return 1;
-		default: return 0;
+	case '0': return 1;
+	case '1': return 1;
+	case '2': return 1;
+	case '3': return 1;
+	case '4': return 1;
+	case '5': return 1;
+	case '6': return 1;
+	case '7': return 1;
+	case '8': return 1;
+	case '9': return 1;
+	default: return 0;
 	}
 }
 
@@ -39,7 +38,7 @@ TODO* open_todo(const char* fname, const char *mode) {
 		(strcmp("w", mode) == 0)  ||
 		(strcmp("w+", mode) == 0) ||
 		(strcmp("a", mode) == 0)
-	 ) {
+		) {
 		return todo;
 	}
 

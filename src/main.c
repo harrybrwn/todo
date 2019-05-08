@@ -185,6 +185,7 @@ static void init() {
 }
 
 int main(int argc, char *argv[]) {
+	// printf("hey\n");
 	init();
 
 	if (!parse_opts(argc, argv)) {
