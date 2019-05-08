@@ -8,14 +8,13 @@ ASM_DIR=bin/asm
 # Compiler
 CC=gcc
 CFLAGS=-Wall -Werror -g -iquote $(INC) -std=c99
-LINT=uncrustify
+FMT=uncrustify
 
 # Files
 UTIL=fileio io
 NAMES=main todo command $(UTIL:%=util/%)
 SRC=$(NAMES:%=$(SRC_DIR)/%.c)
 OBJ=$(NAMES:%=$(OBJ_DIR)/%.o)
-ASM=$(patsubst %,$(ASM_DIR)/%.s,$(NAMES))
 
 
 $(OUT): $(SRC)
@@ -47,14 +46,11 @@ setup:
 
 fmt:
 	@for file in $(SRC) `find $(INC) -name *.h`; do \
-		$(LINT) -c lint.cfg -f $$file > $$file.lint; \
+		$(FMT) -c lint.cfg -f $$file > $$file.lint; \
 		diff $$file $$file.lint; \
 		cat $$file.lint > $$file; \
 		rm $$file.lint; \
 	done
-
-test:
-	$(LINT)
 
 all: setup asm obj bin/proc/pre-proc.i bin/todo
 

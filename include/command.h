@@ -13,7 +13,6 @@
 
 typedef struct flag {
 	char* name;
-
 	void (* action)();
 } Flag;
 
@@ -22,9 +21,7 @@ typedef struct command {
 	char* descr;
 	int   hasargs;
 	int   hidden;
-
 	void (* run)(struct command* cmd, int, char** args);
-
 	char*            _cmd_name;
 	struct command** _sub_cmds;
 } CMD;
