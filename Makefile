@@ -18,11 +18,11 @@ OBJ=$(NAMES:%=$(OBJ_DIR)/%.o)
 ASM=$(patsubst %,$(ASM_DIR)/%.s,$(NAMES))
 
 
-$(OUT): $(SRC) $(OBJ)
-	$(CC) -o $@ $(CFLAGS) $(OBJ)
+$(OUT): $(SRC)
+	$(CC) -o $(OUT) $(CFLAGS) $(SRC)
 
-%.o: $(SRC)
-	$(CC) $(CFLAGS) -c $(SRC)
+obj: $(SRC)
+	$(CC) $(CFLAGS) -c $^
 	@for file in $(NAMES:%=%.o); do mv `basename $$file` $(OBJ_DIR)/$$file; done
 
 asm: $(SRC)
@@ -55,6 +55,6 @@ fmt:
 test:
 	$(LINT)
 
-all: setup asm bin/proc/pre-proc.i bin/todo
+all: setup asm obj bin/proc/pre-proc.i bin/todo
 
 .PHONY: setup clean obj asm all pre-proc test fmt
