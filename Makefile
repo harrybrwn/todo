@@ -18,7 +18,7 @@ OBJ=$(NAMES:%=$(OBJ_DIR)/%.o)
 ASM=$(patsubst %,$(ASM_DIR)/%.s,$(NAMES))
 
 
-$(OUT): $(OBJ)
+$(OUT): setup $(OBJ)
 	$(CC) -o $@ $(CFLAGS) $(OBJ)
 
 %.o: $(SRC)
@@ -50,7 +50,9 @@ setup:
 
 fmt:
 	@for file in $(SRC); do \
-		$(LINT) -c lint.cfg -f $$file > $$file.out; \
+		$(LINT) -c lint.cfg -f $$file > $$file.lint; \
+		cat $$file.lint > $$file; \
+		rm $$file.lint; \
 	done
 
 test:
