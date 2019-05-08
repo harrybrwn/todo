@@ -50,7 +50,7 @@ setup:
 
 fmt:
 	@for file in $(SRC); do \
-		$(LINT) -c lint.cfg -f $$file > $$file; \
+		$(LINT) -c lint.cfg -f $$file > $$file.out; \
 	done
 
 test:
