@@ -22,15 +22,18 @@ static int isInt(char x) {
 	}
 }
 
-TODO* open_todo(const char* fname, const char *mode) {
-	FILE *f = fopen(fname, mode);
+TODO* open_todo(const char* fname, const char* mode) {
+	FILE* f = fopen(fname, mode);
+
 	if (f == NULL) {
-		FILE *newf = fopen(fname, "w+");
+		FILE* newf = fopen(fname, "w+");
+
 		fclose(newf);
 		f = fopen(fname, mode);
 	}
 
-	TODO *todo = malloc(sizeof(TODO));
+	TODO* todo = malloc(sizeof(TODO));
+
 	todo->filename = fname;
 	todo->stream = f;
 
@@ -43,6 +46,7 @@ TODO* open_todo(const char* fname, const char *mode) {
 	}
 
 	FileInfo* info = get_info(f);
+
 	todo->length = info->length;
 	todo->lines = info->lines;
 	free(info);
@@ -62,20 +66,24 @@ void print_todo(TODO* todo) {
 	}
 
 	int count = 0;
+
 	for (int i = 0; i < todo->lines; i++) {
-		if (todo->notes[i] == NULL)
+		if (todo->notes[i] == NULL) {
 			continue;
+		}
 
 		printf("%d. %s\n", ++count, todo->notes[i]->note);
 	}
 }
 
 void close_note(Note** n) {
-	if (*n == NULL)
+	if (*n == NULL) {
 		return;
+	}
 
-	if ((*n)->category != NULL)
+	if ((*n)->category != NULL) {
 		free((*n)->category);
+	}
 
 	free((*n)->note);
 	(*n)->note = NULL;
@@ -84,7 +92,7 @@ void close_note(Note** n) {
 	(*n) = NULL;
 }
 
-void close_todo(TODO **todof) {
+void close_todo(TODO** todof) {
 	fclose((*todof)->stream);
 	for (int i = 0; i < (*todof)->lines; i++) {
 		if ((*todof)->notes[i] != NULL) {
@@ -97,14 +105,15 @@ void close_todo(TODO **todof) {
 	(*todof) = NULL;
 }
 
-void write_note(Note *note, FILE *file) {
+void write_note(Note* note, FILE* file) {
 	fprintf(file, "%d. %s\n", note->line, note->note);
 }
 
-void write_todo(TODO *todo) {
+void write_todo(TODO* todo) {
 	FILE* fp = fopen(todo->filename, "w+");
 
 	int count = 0;
+
 	for (int i = 0; i < todo->lines; i++) {
 		if (todo->notes[i] == NULL) {
 			continue;
@@ -116,7 +125,7 @@ void write_todo(TODO *todo) {
 }
 
 Note* new_note(int lineno, char* data, char* category) {
-	Note *n = malloc(sizeof(Note));
+	Note* n = malloc(sizeof(Note));
 
 	n->line = lineno;
 	n->note = data;
@@ -124,14 +133,15 @@ Note* new_note(int lineno, char* data, char* category) {
 	return n;
 }
 
-Note* read_note(FILE *file) {
-	Note *note = malloc(sizeof(Note));
-	char num[3];
-	char c;
+Note* read_note(FILE* file) {
+	Note* note = malloc(sizeof(Note));
+	char  num[3];
+	char  c;
 
 	for (int i = 0; (c = fgetc(file)) != '.'; i++) {
-		if (c == EOF)
+		if (c == EOF) {
 			return NULL;
+		}
 
 		if (isInt(c)) {
 			num[i] = c;
@@ -140,17 +150,20 @@ Note* read_note(FILE *file) {
 	while ((c = fgetc(file)) != ' ') {}; // skip white space between line no. and note
 
 	// line number
-	char *end;
+	char* end;
+
 	note->line = strtoumax(num, &end, 10);
 
 	note->length = 0;
 	int buf_size = 16;
+
 	note->note = malloc(buf_size);
 
 	while (c != EOF) {
 		c = fgetc(file);
-		if (c == '\n')
+		if (c == '\n') {
 			break;
+		}
 
 		if (note->length == buf_size) {
 			buf_size += 16;

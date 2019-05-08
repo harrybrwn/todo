@@ -5,6 +5,7 @@
 
 Buffer* new_buffer(int size) {
 	Buffer* b = malloc(sizeof(Buffer));
+
 	b->len = 0;
 	b->size = size;
 	b->_growby = 16;
@@ -18,16 +19,18 @@ void close_buffer(Buffer* buf) {
 }
 
 void bufputc(Buffer* buf, char c) {
-	if (buf->len > buf->size)
+	if (buf->len > buf->size) {
 		growb(buf, buf->_growby);
+	}
 
 	buf->data[buf->len++] = c;
 }
 
 int bufputs(Buffer* buf, const char* raw) {
 	for (int i = 0; i < strlen(raw); i++) {
-		if (raw[i] == '\0')
+		if (raw[i] == '\0') {
 			printf("yeah were good\n");
+		}
 		bufputc(buf, raw[i]);
 	}
 	return 1;
@@ -35,9 +38,11 @@ int bufputs(Buffer* buf, const char* raw) {
 
 int freadb(Buffer* buf, FILE* fp) {
 	char c;
+
 	while ((c = fgetc(fp)) != EOF) {
-		if (++buf->len > buf->size)
+		if (++buf->len > buf->size) {
 			growb(buf, 16);
+		}
 
 		buf->data[buf->len] = c;
 	}

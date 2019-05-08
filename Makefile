@@ -46,8 +46,9 @@ setup:
 	@if [ ! -d "$(ASM_DIR)/util" ]; then mkdir $(ASM_DIR)/util -p; fi
 
 fmt:
-	@for file in $(SRC); do \
+	@for file in $(SRC) `find $(INC) -name *.h`; do \
 		$(LINT) -c lint.cfg -f $$file > $$file.lint; \
+		diff $$file $$file.lint; \
 		cat $$file.lint > $$file; \
 		rm $$file.lint; \
 	done

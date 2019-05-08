@@ -1,4 +1,5 @@
-# Binaries
+# Build
+/build/
 *.exe
 bin/todo
 
@@ -10,8 +11,6 @@ bin/todo
 
 # Tests
 test*
-*.cfg
 
 # Notes
-*.txt
 TODO

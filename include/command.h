@@ -13,17 +13,19 @@
 
 typedef struct flag {
 	char* name;
-	void (*action)();
+
+	void (* action)();
 } Flag;
 
 typedef struct command {
-	char *use;
-	char *descr;
-	void (*run)(struct command *cmd, int, char** args);
-	int hasargs;
-	int hidden;
+	char* use;
+	char* descr;
+	int   hasargs;
+	int   hidden;
 
-	char* _cmd_name;
+	void (* run)(struct command* cmd, int, char** args);
+
+	char*            _cmd_name;
 	struct command** _sub_cmds;
 } CMD;
 
@@ -32,8 +34,8 @@ void setRoot(CMD*);
 void addCommand(CMD*);
 void addToCommand(CMD*, CMD*);
 
-CMD *findCommand(char*);
-void help();
+CMD* findCommand(char*);
 
+void help();
 
 #endif

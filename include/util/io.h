@@ -9,6 +9,7 @@ typedef struct _buffer {
 } Buffer;
 
 Buffer* new_buffer();
+
 void close_buffer(Buffer*);
 
 void bufputc(Buffer*, char);

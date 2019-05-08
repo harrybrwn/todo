@@ -9,16 +9,17 @@
 #include "todo.h"
 
 static CMD todo = {
-	.use = "todo",
+	.use   = "todo",
 	.descr = "write down your todo list.",
 };
 
 static void show_todo() {
-	TODO *todof = open_todo("./TODO", "r");
+	TODO* todof = open_todo("./TODO", "r");
 
 	if (todof->stream == NULL) {
 		printf("creating 'TODO' file\n");
-		FILE *f = fopen("./TODO", "w");
+		FILE* f = fopen("./TODO", "w");
+
 		fclose(f);
 		return;
 	}
@@ -28,13 +29,14 @@ static void show_todo() {
 }
 
 static void add_note(int argc, char** args) {
-	TODO* todof = open_todo("./TODO", "r+");
+	TODO*   todof = open_todo("./TODO", "r+");
 	Buffer* buf = new_buffer(32);
 
 	for (int i = 0; i < argc; i++) {
 		bufputs(buf, args[i]);
-		if (i != argc - 1)
+		if (i != argc - 1) {
 			bufputc(buf, ' ');
+		}
 	}
 	bufputc(buf, '\0');
 
@@ -50,12 +52,13 @@ static void error(const char* msg) {
 	exit(1);
 }
 
-static int parse_int(char *str) {
-	char *end;
+static int parse_int(char* str) {
+	char* end;
+
 	return strtoumax(str, &end, 10);
 }
 
-static void run_rm(CMD *cmd, int argc, char** argv) {
+static void run_rm(CMD* cmd, int argc, char** argv) {
 	if (argc > 1) {
 		error("too many arguments");
 	} else if (argc < 1) {
@@ -63,13 +66,16 @@ static void run_rm(CMD *cmd, int argc, char** argv) {
 	}
 
 	TODO* todof = open_todo("./TODO", "r+");
-	int line_index = parse_int(argv[0]) - 1;
-	if (line_index > todof->lines)
+	int   line_index = parse_int(argv[0]) - 1;
+
+	if (line_index > todof->lines) {
 		error("Error: todo file is not that long");
+	}
 
 	todof->notes[line_index] = NULL;
-	if (todof->length == 1)
+	if (todof->length == 1) {
 		todof->length = 2;
+	}
 
 	print_todo(todof);
 	write_todo(todof);
@@ -77,9 +83,9 @@ static void run_rm(CMD *cmd, int argc, char** argv) {
 }
 
 static CMD rm = {
-	.use = "rm    <line>",
-	.descr = "remove an item from the list",
-	.run = run_rm,
+	.use     = "rm    <line>",
+	.descr   = "remove an item from the list",
+	.run     = run_rm,
 	.hasargs = true
 };
 
@@ -91,13 +97,16 @@ void run_check(CMD* cmd, int argc, char** argv) {
 	}
 
 	TODO* todof = open_todo("./TODO", "r+");
-	int line_index = parse_int(argv[0]) - 1;
-	if (line_index > todof->lines)
+	int   line_index = parse_int(argv[0]) - 1;
+
+	if (line_index > todof->lines) {
 		error("Error: todo file is not that long");
+	}
 
 	Buffer* buf = new_buffer(32);
 
 	int len = strlen(todof->notes[line_index]->note);
+
 	for (int i = 0; i < len; i++) {
 		bufputc(buf, '-');
 		bufputc(buf, todof->notes[line_index]->note[i]);
@@ -109,13 +118,13 @@ void run_check(CMD* cmd, int argc, char** argv) {
 }
 
 static CMD check = {
-	.use = "check <line>",
-	.descr = "check items off the list",
-	.run = run_check,
+	.use     = "check <line>",
+	.descr   = "check items off the list",
+	.run     = run_check,
 	.hasargs = true
 };
 
-static void run_get(CMD *cmd, int argc, char** args) {
+static void run_get(CMD* cmd, int argc, char** args) {
 	if (argc > 1) {
 		error("Error: too many arguments");
 	} else if (argc < 1) {
@@ -125,10 +134,12 @@ static void run_get(CMD *cmd, int argc, char** args) {
 	TODO* todof = open_todo("./TODO", "r");
 
 	int index = parse_int(args[0]);
-	if (index <= 0)
+
+	if (index <= 0) {
 		error("Error: please give a line number");
-	else if (index > todof->lines)
+	} else if (index > todof->lines) {
 		error("Error: todo list isn't that long");
+	}
 
 	printf("line %d:\n", index);
 	printf("\t%s\n", todof->notes[index - 1]->note);
@@ -136,41 +147,47 @@ static void run_get(CMD *cmd, int argc, char** args) {
 }
 
 static CMD get = {
-	.use = "get   <line>",
-	.descr = "show the <n>th item on the list",
-	.run = run_get,
+	.use     = "get   <line>",
+	.descr   = "show the <n>th item on the list",
+	.run     = run_get,
 	.hasargs = true
 };
 
-static void run_delete(CMD *cmd, int argc, char** args) {
-	for (int i = 0; i < argc; i++)
+static void run_delete(CMD* cmd, int argc, char** args) {
+	for (int i = 0; i < argc; i++) {
 		free(args[i]);
+	}
 
-	if (remove("./TODO") == 0)
+	if (remove("./TODO") == 0) {
 		printf("deleted TODO.\n");
-	else
+	} else {
 		printf("cannot delete 'TODO' file\n");
+	}
 }
 
 static CMD del = {
-	.use = "del",
-	.descr = "delete the current TODO file",
-	.run = run_delete,
+	.use     = "del",
+	.descr   = "delete the current TODO file",
+	.run     = run_delete,
 	.hasargs = false
 };
 
-static void run_test(CMD *cmd, int argc, char** argv) {
+static void run_test(CMD* cmd, int argc, char** argv) {
 	int a = 97;
-	for (int i = 0; i < 300; i++)
-		printf("%d: %c\n", a+i, a+i);
+
+	for (int i = 0; i < 300; i++) {
+		printf("%d: %c\n", a + i, a + i);
+	}
 }
 
 static CMD test = {
-	.use = "test",
-	.descr = "developer testing option",
-	.run = run_test,
+	.use    = "test",
+	.descr  = "developer testing option",
+	.run    = run_test,
 	.hidden = true
 };
+
+CMD no = { .use = "no", .hidden = true };
 
 static void init() {
 	setRoot(&todo);
@@ -184,7 +201,7 @@ static void init() {
 	addCommand(&test);
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
 	// printf("hey\n");
 	init();
 
