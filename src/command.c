@@ -132,12 +132,22 @@ CMD* findCommand(char* name) {
 			return NULL;
 		}
 
-		// char* cname = get_cmd_name(_commands[i]->use);
 		if (strcmp(_commands[i]->_cmd_name, name) == 0) {
-			// free(cname);
 			return _commands[i];
 		}
-		// free(cname);
+	}
+	return NULL;
+}
+
+CMD* find_command(CMD** cmds, int len, char* name) {
+	for (int i = 0; i < len; i++) {
+		if (cmds[i] == NULL) {
+			continue;
+		}
+
+		if (strcmp(cmds[i]->_cmd_name, name) == 0) {
+			return cmds[i];
+		}
 	}
 	return NULL;
 }

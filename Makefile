@@ -5,10 +5,12 @@ SRC_DIR=src
 OBJ_DIR=bin/obj
 ASM_DIR=bin/asm
 
-# Compiler
+# Compiler and Code Analysis
 CC=gcc
 CFLAGS=-Wall -Werror -g -iquote $(INC) -std=c99
 FMT=uncrustify
+FMT_CONFIG=lint.cfg
+
 
 # Files
 UTIL=fileio io
@@ -44,14 +46,17 @@ setup:
 	@if [ ! -d "$(OBJ_DIR)/util" ]; then mkdir $(OBJ_DIR)/util -p; fi
 	@if [ ! -d "$(ASM_DIR)/util" ]; then mkdir $(ASM_DIR)/util -p; fi
 
-fmt:
+fmt: lint
 	@for file in $(SRC) `find $(INC) -name *.h`; do \
-		$(FMT) -c lint.cfg -f $$file > $$file.lint; \
+		$(FMT) -c $(FMT_CONFIG) -f $$file > $$file.lint; \
 		diff $$file $$file.lint; \
 		cat $$file.lint > $$file; \
 		rm $$file.lint; \
 	done
 
+lint:
+	@go run ./scripts/lint.go $(CFLAGS) $(SRC)
+
 all: setup asm obj bin/proc/pre-proc.i bin/todo
 
-.PHONY: setup clean obj asm all pre-proc test fmt
+.PHONY: setup clean obj asm all pre-proc test fmt lint
