@@ -8,17 +8,14 @@
 #include "util/io.h"
 #include "todo.h"
 
-static CMD todo = {
-	.use   = "todo",
-	.descr = "write down your todo list.",
-};
+static const char* TODOFILE = "./TODO";
 
-static void show_todo() {
-	TODO* todof = open_todo("./TODO", "r");
+void show_todo() {
+	TODO* todof = open_todo(TODOFILE, "r");
 
 	if (todof->stream == NULL) {
 		printf("creating 'TODO' file\n");
-		FILE* f = fopen("./TODO", "w");
+		FILE* f = fopen(TODOFILE, "w");
 
 		fclose(f);
 		return;
@@ -28,8 +25,12 @@ static void show_todo() {
 	close_todo(&todof);
 }
 
-static void add_note(int argc, char** args) {
-	TODO*   todof = open_todo("./TODO", "r+");
+static void add_note(CMD* cmd, int argc, char** args) {
+	if (argc == 0) {
+		show_todo();
+		return;
+	}
+	TODO*   todof = open_todo(TODOFILE, "r+");
 	Buffer* buf = new_buffer(32);
 
 	for (int i = 0; i < argc; i++) {
@@ -83,10 +84,9 @@ static void run_rm(CMD* cmd, int argc, char** argv) {
 }
 
 static CMD rm = {
-	.use     = "rm    <line>",
-	.descr   = "remove an item from the list",
-	.run     = run_rm,
-	.hasargs = true
+	.use   = "rm    <line>",
+	.descr = "Remove an item from the list",
+	.run   = run_rm,
 };
 
 void run_check(CMD* cmd, int argc, char** argv) {
@@ -118,10 +118,9 @@ void run_check(CMD* cmd, int argc, char** argv) {
 }
 
 static CMD check = {
-	.use     = "check <line>",
-	.descr   = "check items off the list",
-	.run     = run_check,
-	.hasargs = true
+	.use   = "cross <line>",
+	.descr = "Cross items off the list",
+	.run   = run_check,
 };
 
 static void run_get(CMD* cmd, int argc, char** args) {
@@ -132,8 +131,7 @@ static void run_get(CMD* cmd, int argc, char** args) {
 	}
 
 	TODO* todof = open_todo("./TODO", "r");
-
-	int index = parse_int(args[0]);
+	int   index = parse_int(args[0]);
 
 	if (index <= 0) {
 		error("Error: please give a line number");
@@ -147,10 +145,9 @@ static void run_get(CMD* cmd, int argc, char** args) {
 }
 
 static CMD get = {
-	.use     = "get   <line>",
-	.descr   = "show the <n>th item on the list",
-	.run     = run_get,
-	.hasargs = true
+	.use   = "get   <line>",
+	.descr = "Show the <n>th item on the list",
+	.run   = run_get,
 };
 
 static void run_delete(CMD* cmd, int argc, char** args) {
@@ -166,51 +163,60 @@ static void run_delete(CMD* cmd, int argc, char** args) {
 }
 
 static CMD del = {
-	.use     = "del",
-	.descr   = "delete the current TODO file",
-	.run     = run_delete,
-	.hasargs = false
+	.use   = "del",
+	.descr = "Delete the current TODO file from the disc",
+	.run   = run_delete,
 };
 
 static void run_test(CMD* cmd, int argc, char** argv) {
-	int a = 97;
-
-	for (int i = 0; i < 300; i++) {
-		printf("%d: %c\n", a + i, a + i);
-	}
+	printf("stop. you shouldn't be using this!\n");
 }
 
 static CMD test = {
 	.use    = "test",
 	.descr  = "developer testing option",
 	.run    = run_test,
-	.hidden = true
+	.hidden = true,
 };
 
-CMD no = { .use = "no", .hidden = true };
+CMD todo = {
+	.use   = "todo [flags] [option]",
+	.descr = "Manage your todo list from the command prompt.\n\n"
+	         "    todo will take any arguments you give it and\n"
+	         "    write them to a the TODO file as a list item\n"
+	         "    as long as the first word does not match one of\n"
+	         "    the commands. If this is the case just surround\n"
+	         "    the note with quotes.",
+	.run   = add_note,
+};
+
+int x = 0;
+
+Flag todo_flag = {
+	.name      = "test",
+	.descr     = "test out the todo command.",
+	.shorthand = 't',
+	.is_bool   = true,
+	// .hidden    = true,
+	.value     = &x,
+};
 
 static void init() {
-	setRoot(&todo);
+	addFlag(&todo, todo_flag);
+	setRoot(&todo, false);
 
-	addCommand(&rm);
 	addCommand(&del);
-	addCommand(&get);
 	addCommand(&check);
+	addCommand(&get);
+	addCommand(&rm);
 
 	// hidden
 	addCommand(&test);
 }
 
 int main(int argc, char* argv[]) {
-	// printf("hey\n");
 	init();
-
-	if (!parse_opts(argc, argv)) {
-		if (argc == 1) {
-			show_todo();
-		} else {
-			add_note(--argc, ++argv);
-		}
-	}
+	parse_opts(argc, argv);
+	close_cli();
 	return 0;
 }
