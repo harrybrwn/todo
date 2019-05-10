@@ -8,24 +8,19 @@ import (
 	"os/exec"
 	"regexp"
 	"strconv"
+	"strings"
+	"flag"
 )
 
 const (
 	compiler = "gcc"
-	inc      = "include"
 	lintflag = "-fsyntax-only"
 )
 
 var (
-	cflags = []string{
-		"-Wall",
-		"-Werror",
-		"-g",
-		"-iquote",
-		inc,
-		"-std=c99",
-		// lintflag,
-	}
+	fSet = flag.NewFlagSet("lint", flag.ContinueOnError)
+	showCmd = fSet.Bool("show-cmd", false, "show the command run by the linter")
+
 	basepat = `(.*?\.[ch]):(\d+):(\d+): %s`
 )
 
@@ -71,14 +66,29 @@ func (e *Error) String() string {
 }
 
 func main() {
-	flags := append([]string{lintflag}, os.Args[1:]...)
-	output, _ := exec.Command(compiler, flags...).CombinedOutput()
+	if len(os.Args) <= 1 {
+		println("need command lint arguments")
+		os.Exit(1)
+	}
+	if len(os.Args) > 2 {
+		fSet.Parse(os.Args[2:])
+	}
+
+	flags := append([]string{lintflag}, strings.Split(os.Args[1], " ")...)
+
+	cmd := exec.Command(compiler, flags...)
+
+	if *showCmd {
+		fmt.Println(strings.Join(cmd.Args, " "))
+		print("\n")
+	}
+
+	output, _ := cmd.CombinedOutput()
 
 	status := 0
 	if len(output) > 0 {
 		status = 1
 	}
-	// fmt.Printf("%s\n", output)
 
 	lines := bytes.Split(output, []byte("\n"))
 

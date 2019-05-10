@@ -14,17 +14,18 @@ FMT_CONFIG=lint.cfg
 
 # Files
 UTIL=fileio io
-NAMES=main todo command $(UTIL:%=util/%)
+PKG=todo command $(UTIL:%=util/%)
+NAMES=main $(PKG)
 SRC=$(NAMES:%=$(SRC_DIR)/%.c)
-OBJ=$(NAMES:%=$(OBJ_DIR)/%.o)
+HEADERS=$(PKG:%=$(INC)/%.h)
 
 
-$(OUT): $(SRC)
+$(OUT): $(SRC) $(HEADERS)
 	$(CC) -o $(OUT) $(CFLAGS) $(SRC)
 
 obj: $(SRC)
 	$(CC) $(CFLAGS) -c $^
-	@for file in $(NAMES:%=%.o); do mv `basename $$file` $(OBJ_DIR)/$$file; done
+	@for file in $(NAMES:%=$(OBJ_DIR)/%.o); do mv `basename $$file` $$file; done
 
 asm: $(SRC)
 	$(CC) $(CFLAGS) -S $(SRC)
@@ -34,7 +35,7 @@ bin/proc/pre-proc.i: $(SRC)
 	@if [ ! -d "bin/proc" ]; then \
 		mkdir bin/proc ;\
 	fi
-	$(CC) $(CFLAGS) -E $(SRC) > $@ # bin/proc/pre-proc.i
+	$(CC) $(CFLAGS) -E $(SRC) > $@
 
 clean:
 	@for file in `find . -name *.o`; do rm $$file; done
@@ -55,7 +56,7 @@ fmt: lint
 	done
 
 lint:
-	@go run ./scripts/lint.go $(CFLAGS) $(SRC)
+	@go run ./scripts/lint.go "$(CFLAGS) $(SRC)" -show-cmd
 
 all: setup asm obj bin/proc/pre-proc.i bin/todo
 
