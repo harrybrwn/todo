@@ -19,14 +19,10 @@ typedef struct flag {
 	int    is_bool;
 	int    is_string;
 	int    triggered;
-} Flag;
 
-// typedef struct _flag_var {
-// 	char* name;
-// 	char shorthand;
-// 	char* descr;
-// 	void* var;
-// } FlagVar;
+	char* __name;
+	char  __shorthand[2];
+} Flag;
 
 typedef struct command {
 	char* use;

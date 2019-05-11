@@ -9,16 +9,21 @@ static int  _override_usage = 0;
 
 static void usage();
 static CMD* findCommand(char*);
+static void init_cmd(CMD*);
 static void close_cmd(CMD*);
 
-static void root_use(CMD* root, int argc, char** argv) {
+static void set_flag_value(Flag*, char*);
+static void _print_flag(Flag, char*, int);
+
+static void run_root(CMD* root, int argc, char** argv) {
 	usage(*root);
 }
 
 void setRoot(CMD* cmd, int override_usage) {
 	if (cmd->run == NULL) {
-		cmd->run = root_use;
+		cmd->run = run_root;
 	}
+	init_cmd(cmd);
 	_root = cmd;
 	_override_usage = override_usage;
 }
@@ -38,6 +43,37 @@ void help() {
 	usage(*_root);
 }
 
+static void run_cmd(CMD* cmd, int argc, char** argv) {
+	int    argcount = 0;
+	char** new_argv = malloc(argc * sizeof(char*));
+
+	for (int i = 0; i < argc; i++) {
+		if (argv[i][0] != '-') {
+			new_argv[argcount++] = argv[i];
+			continue;
+		}
+
+		for (int j = 0; j < cmd->n_flags; j++) {
+			if (
+				strcmp(argv[i], cmd->flags[j].__shorthand) == 0 ||
+				strcmp(argv[i], cmd->flags[j].__name) == 0)
+			{
+				cmd->flags[j].triggered = 1;
+
+				if (i == argc - 1) {
+					set_flag_value(&(cmd->flags[j]), NULL);
+				} else {
+					set_flag_value(&(cmd->flags[j]), argv[++i]);
+				}
+			}
+		}
+	}
+	new_argv = realloc(new_argv, argcount * sizeof(char*));
+
+	(*cmd).run(cmd, argcount, new_argv);
+	free(new_argv);
+}
+
 int parse_opts(int argc, char** argv) {
 	if (_root == NULL) {
 		printf("Error: must set root command.\n");
@@ -53,16 +89,14 @@ int parse_opts(int argc, char** argv) {
 		usage(*_root);
 		return true;
 	}
+	argc--;
 	CMD* cmd = findCommand((++argv)[0]);
 
 	if (cmd == NULL) {
-		(*_root).run(_root, --argc, argv);
+		run_cmd(_root, argc, argv);
 		return false;
-	} else {
-		argc--;
 	}
-
-	(*cmd).run(cmd, --argc, ++argv);
+	run_cmd(cmd, --argc, ++argv);
 	return true;
 }
 
@@ -71,6 +105,7 @@ void close_cli() {
 		close_cmd(_root->_sub_cmds[i]);
 	}
 	free(_root->_sub_cmds);
+	free(_root->_cmd_name);
 }
 
 static int maxOfCMD(int n, CMD** cmds) {
@@ -115,16 +150,6 @@ static void _print_cmd(CMD* c, char* spacer, int indent) {
 	       c->descr);
 }
 
-static void _print_flag(Flag f, char* spacer, int indent) {
-	if (f.shorthand == '\0') {
-		printf("       --%s %.*s %s\n", f.name,
-		       indent - (int)strlen(f.name), spacer, f.descr);
-	} else {
-		printf("  -%c, --%s %.*s %s\n", f.shorthand, f.name,
-		       indent - (int)strlen(f.name), spacer, f.descr);
-	}
-}
-
 void cmd_usage(CMD cmd) {
 	int   max = maxOfCMD(cmd._n_cmds, cmd._sub_cmds) + 1;
 	char* spacer = spaces(max + 1);
@@ -159,22 +184,16 @@ static void usage(CMD top) {
 	}
 
 	cmd_usage(top);
-	printf("  -h, --help   get help for todo\n");
+	printf("  -h, --help   get help for %s\n", top._cmd_name);
 }
 
 static char* get_cmd_name(char* usage) {
-	int i, n = 0;
-	int length = strlen(usage);
-
-	for (i = 0; i < length + 1; i++) {
-		if (usage[i] == ' ' || usage[i] == '\0') {
-			n = i;
-			break;
-		}
+	int i = 0, n = 0;
+	while (usage[i] != ' ' && usage[i] != '\0') {
+		i++; n++;
 	}
 
 	char* name = malloc(n + 1);
-
 	for (i = 0; i < n; i++) {
 		name[i] = usage[i];
 	}
@@ -189,6 +208,12 @@ static void init_cmd(CMD* cmd) {
 
 static void close_cmd(CMD* cmd) {
 	free(cmd->_cmd_name);
+	for (int i = 0; i < cmd->n_flags; i++) {
+		free(cmd->flags[i].__name);
+		if (cmd->flags[i].is_string && cmd->flags[i].triggered) {
+			free(cmd->flags[i].value);
+		}
+	}
 }
 
 void addToCommand(CMD* root, CMD* cmd) {
@@ -207,7 +232,7 @@ void addCommand(CMD* cmd) {
 		exit(1);
 	}
 	if (cmd->n_flags != 0) {
-		perror("'n_flags' is a private field, do not touch it");
+		perror("'n_flags' is a private field, do not set it");
 		exit(1);
 	}
 	init_cmd(cmd);
@@ -247,6 +272,9 @@ static void flagtype_check(Flag f) {
 }
 
 void addFlags(CMD* cmd, Flag* flags, int nflags) {
+	printf("dont use 'addFlags'\n");
+	exit(1);
+
 	for (int i = 0; i < nflags; i++) {
 		if (flags[i].triggered) {
 			printf("cannot add a flag that has already been triggered\n");
@@ -258,7 +286,43 @@ void addFlags(CMD* cmd, Flag* flags, int nflags) {
 	cmd->flags = flags;
 }
 
+static void init_flag(Flag* f) {
+	f->__name = calloc(strlen(f->name) + 3, sizeof(char));
+	f->__name[0] = '-';
+	f->__name[1] = '-';
+	strcat(f->__name, f->name);
+
+	f->__shorthand[0] = '-';
+	f->__shorthand[1] = f->shorthand;
+}
+
 void addFlag(CMD* cmd, Flag flag) {
 	cmd->flags = realloc(cmd->flags, (cmd->n_flags + 1) * sizeof(Flag));
+	init_flag(&flag);
 	cmd->flags[cmd->n_flags++] = flag;
+}
+
+static void set_flag_value(Flag* flag, char* next_arg) {
+	if (flag->is_string) {
+		int size;
+		if (next_arg == NULL) {
+			printf("must give positional argument to %s\n", flag->name);
+			exit(1);
+			size = 4;
+		} else {
+			size = strlen(next_arg);
+		}
+		flag->value = malloc(size);
+		flag->value = next_arg;
+	}
+}
+
+static void _print_flag(Flag f, char* spacer, int indent) {
+	if (f.shorthand == '\0') {
+		printf("       --%s %.*s %s\n", f.name,
+		       indent - (int)strlen(f.name), spacer, f.descr);
+	} else {
+		printf("  -%c, --%s %.*s %s\n", f.shorthand, f.name,
+		       indent - (int)strlen(f.name), spacer, f.descr);
+	}
 }

@@ -5,7 +5,6 @@ typedef struct _note {
 	int   line;
 	char* note;
 	int   length;
-	char* category;
 } Note;
 
 typedef struct {

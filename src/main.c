@@ -10,27 +10,35 @@
 
 static const char* TODOFILE = "./TODO";
 
-void show_todo() {
-	TODO* todof = open_todo(TODOFILE, "r");
+void show_todo(const char* filename) {
+	TODO* todof = open_todo(filename, "r");
 
 	if (todof->stream == NULL) {
 		printf("creating 'TODO' file\n");
-		FILE* f = fopen(TODOFILE, "w");
+		FILE* f = fopen(filename, "w");
 
 		fclose(f);
 		return;
 	}
-
 	print_todo(todof);
 	close_todo(&todof);
 }
 
 static void add_note(CMD* cmd, int argc, char** args) {
+	const char* file = TODOFILE;
+
+	for (int i = 0; i < cmd->n_flags; i++) {
+		if (cmd->flags[i].triggered && strcmp(cmd->flags[i].name, "file") == 0) {
+			file = (char*)cmd->flags[i].value;
+		}
+	}
+
 	if (argc == 0) {
-		show_todo();
+		show_todo(file);
 		return;
 	}
-	TODO*   todof = open_todo(TODOFILE, "r+");
+
+	TODO*   todof = open_todo(file, "r+");
 	Buffer* buf = new_buffer(32);
 
 	for (int i = 0; i < argc; i++) {
@@ -42,7 +50,6 @@ static void add_note(CMD* cmd, int argc, char** args) {
 	bufputc(buf, '\0');
 
 	Note* n = new_note(todof->lines + 1, buf->data, NULL);
-
 	write_note(n, todof->stream);
 	close_todo(&todof);
 	close_note(&n);
@@ -182,7 +189,7 @@ static CMD test = {
 CMD todo = {
 	.use   = "todo [flags] [option]",
 	.descr = "Manage your todo list from the command prompt.\n\n"
-	         "    todo will take any arguments you give it and\n"
+	         "    Todo will take any arguments you give it and\n"
 	         "    write them to a the TODO file as a list item\n"
 	         "    as long as the first word does not match one of\n"
 	         "    the commands. If this is the case just surround\n"
@@ -190,19 +197,24 @@ CMD todo = {
 	.run   = add_note,
 };
 
-int x = 0;
-
 Flag todo_flag = {
 	.name      = "test",
 	.descr     = "test out the todo command.",
 	.shorthand = 't',
 	.is_bool   = true,
-	// .hidden    = true,
-	.value     = &x,
+	.hidden    = true,
+};
+
+Flag fileFlag = {
+	.name      = "file",
+	.shorthand = 'f',
+	.descr     = "give the program a spesific file to open",
+	.is_string = true,
 };
 
 static void init() {
 	addFlag(&todo, todo_flag);
+	addFlag(&todo, fileFlag);
 	setRoot(&todo, false);
 
 	addCommand(&del);
@@ -216,6 +228,8 @@ static void init() {
 
 int main(int argc, char* argv[]) {
 	init();
+	// exit(0);
+
 	parse_opts(argc, argv);
 	close_cli();
 	return 0;

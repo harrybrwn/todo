@@ -7,7 +7,7 @@ FileInfo* get_info(FILE* f) {
 	fseek(f, 0, SEEK_SET);
 
 	FileInfo* file_info = malloc(sizeof(FileInfo));
-	char      c;
+	char      c = '\0';
 
 	file_info->length = 0;
 	file_info->lines = 0;

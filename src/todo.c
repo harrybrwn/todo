@@ -81,13 +81,10 @@ void close_note(Note** n) {
 		return;
 	}
 
-	if ((*n)->category != NULL) {
-		free((*n)->category);
+	if ((*n)->note != NULL) {
+		free((*n)->note);
+		(*n)->note = NULL;
 	}
-
-	free((*n)->note);
-	(*n)->note = NULL;
-
 	free(*n);
 	(*n) = NULL;
 }
@@ -97,12 +94,15 @@ void close_todo(TODO** todof) {
 	for (int i = 0; i < (*todof)->lines; i++) {
 		if ((*todof)->notes[i] != NULL) {
 			close_note(&((*todof)->notes[i]));
+			(*todof)->notes[i] = NULL;
 		}
 	}
 	free((*todof)->notes);
 
-	free(*todof);
-	(*todof) = NULL;
+	if (*todof != NULL) {
+		free(*todof);
+		(*todof) = NULL;
+	}
 }
 
 void write_note(Note* note, FILE* file) {
@@ -129,7 +129,6 @@ Note* new_note(int lineno, char* data, char* category) {
 
 	n->line = lineno;
 	n->note = data;
-	n->category = category;
 	return n;
 }
 
@@ -142,7 +141,6 @@ Note* read_note(FILE* file) {
 		if (c == EOF) {
 			return NULL;
 		}
-
 		if (isInt(c)) {
 			num[i] = c;
 		}
@@ -150,8 +148,8 @@ Note* read_note(FILE* file) {
 	while ((c = fgetc(file)) != ' ') {}; // skip white space between line no. and note
 
 	// line number
-	char* end;
-
+	char* end = calloc(1, 1);
+	note->line = 0;
 	note->line = strtoumax(num, &end, 10);
 
 	note->length = 0;
