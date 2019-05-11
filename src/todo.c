@@ -4,6 +4,7 @@
 #include <inttypes.h>
 
 #include "util/fileio.h"  // file_len, file_lines
+#include "util/io.h"
 #include "todo.h"
 
 static int isInt(char x) {
@@ -148,14 +149,12 @@ Note* read_note(FILE* file) {
 	while ((c = fgetc(file)) != ' ') {}; // skip white space between line no. and note
 
 	// line number
-	char* end = calloc(1, 1);
-	note->line = 0;
+	char* end;
 	note->line = strtoumax(num, &end, 10);
+	// note->line = atoi(num);
 
 	note->length = 0;
-	int buf_size = 16;
-
-	note->note = malloc(buf_size);
+	Buffer* buf = new_buffer(16);
 
 	while (c != EOF) {
 		c = fgetc(file);
@@ -163,14 +162,11 @@ Note* read_note(FILE* file) {
 			break;
 		}
 
-		if (note->length == buf_size) {
-			buf_size += 16;
-			note->note = realloc(note->note, buf_size * sizeof(char));
-		}
-
-		note->note[note->length++] = c;
+		bufputc(buf, c);
 	}
-	note->note[note->length] = '\0';
+	bufputc(buf, '\0');
+	note->note = buf->data;
+	note->length = buf->len;
 
 	return note;
 }
