@@ -75,8 +75,9 @@ static void run_cmd(CMD* cmd, int argc, char** argv) {
 }
 
 int parse_opts(int argc, char** argv) {
+	CMD* cmd;
 	if (_root == NULL) {
-		printf("Error: must set root command.\n");
+		fprintf(stderr, "Error: must set root command.\n");
 		exit(1);
 	}
 
@@ -86,11 +87,23 @@ int parse_opts(int argc, char** argv) {
 	}
 
 	if (isHelp(argv[1])) {
-		usage(*_root);
-		return true;
+		if (argc == 2) {
+			usage(*_root);
+			return true;
+		} else if (argc == 3) {
+			cmd = findCommand(argv[2]);
+			if (cmd == NULL) {
+				fprintf(stderr, "could not find '%s'\n", argv[2]);
+				return false;
+			}
+			usage(*cmd);
+			return true;
+		} else {
+			return false;
+		}
 	}
 	argc--;
-	CMD* cmd = findCommand((++argv)[0]);
+	cmd = findCommand((++argv)[0]);
 
 	if (cmd == NULL) {
 		run_cmd(_root, argc, argv);
@@ -100,12 +113,13 @@ int parse_opts(int argc, char** argv) {
 	return true;
 }
 
-void close_cli() {
+int close_cli() {
 	for (int i = 0; i < _root->_n_cmds; i++) {
 		close_cmd(_root->_sub_cmds[i]);
 	}
 	free(_root->_sub_cmds);
 	free(_root->_cmd_name);
+	return 0;
 }
 
 static int maxOfCMD(int n, CMD** cmds) {

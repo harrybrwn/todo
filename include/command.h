@@ -48,6 +48,6 @@ void addFlag(CMD*, Flag);
 void addToCommand(CMD*, CMD*);
 
 void help();
-void close_cli();
+int close_cli();
 
 #endif

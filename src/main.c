@@ -56,7 +56,7 @@ static void add_note(CMD* cmd, int argc, char** args) {
 }
 
 static void error(const char* msg) {
-	printf("%s\n", msg);
+	fprintf(stderr, "%s\n", msg);
 	exit(1);
 }
 
@@ -228,9 +228,7 @@ static void init() {
 
 int main(int argc, char* argv[]) {
 	init();
-	// exit(0);
 
 	parse_opts(argc, argv);
-	close_cli();
-	return 0;
+	return close_cli();
 }
