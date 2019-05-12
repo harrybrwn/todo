@@ -19,7 +19,7 @@ void close_buffer(Buffer* buf) {
 }
 
 void bufputc(Buffer* buf, char c) {
-	if (buf->len > buf->size) {
+	if (buf->len >= buf->size) {
 		growb(buf, buf->_growby);
 	}
 

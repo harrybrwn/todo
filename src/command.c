@@ -106,10 +106,12 @@ int parse_opts(int argc, char** argv) {
 	cmd = findCommand((++argv)[0]);
 
 	if (cmd == NULL) {
-		run_cmd(_root, argc, argv);
-		return false;
+		cmd = _root;
+	} else {
+		argc--;
+		argv++;
 	}
-	run_cmd(cmd, --argc, ++argv);
+	run_cmd(cmd, argc, argv);
 	return true;
 }
 

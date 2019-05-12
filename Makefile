@@ -13,11 +13,14 @@ FMT_CONFIG=lint.cfg
 
 
 # Files
-UTIL=fileio io
+UTIL=fileio io map
 PKG=todo command $(UTIL:%=util/%)
 NAMES=main $(PKG)
 SRC=$(NAMES:%=$(SRC_DIR)/%.c)
 HEADERS=$(PKG:%=$(INC)/%.h)
+
+# Testing
+TEST=tests/test
 
 
 $(OUT): $(SRC) $(HEADERS)
@@ -57,6 +60,11 @@ fmt: lint
 
 lint:
 	@go run ./scripts/lint.go "$(CFLAGS) $(SRC)" -show-cmd
+
+test:
+	@$(CC) $(CFLAGS) -o $(TEST) $(PKG:%=$(SRC_DIR)/%.c) tests/test.c
+	@$(TEST)
+
 
 all: setup asm obj bin/proc/pre-proc.i bin/todo
 

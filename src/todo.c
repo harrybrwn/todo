@@ -150,7 +150,7 @@ Note* read_note(FILE* file) {
 
 	// line number
 	char* end;
-	note->line = strtoumax(num, &end, 10);
+	note->line = strtoimax(num, &end, 10);
 	// note->line = atoi(num);
 
 	note->length = 0;
@@ -167,6 +167,7 @@ Note* read_note(FILE* file) {
 	bufputc(buf, '\0');
 	note->note = buf->data;
 	note->length = buf->len;
+	free(buf);
 
 	return note;
 }

@@ -1,0 +1,4 @@
+C:\Users\harry\dev\c\todo\src\util\map.c:3:22: fatal error: util/map.h: No such file or directory
+ #include "util/map.h"
+                      ^
+compilation terminated.
