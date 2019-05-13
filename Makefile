@@ -14,7 +14,8 @@ FMT_CONFIG=lint.cfg
 
 # Files
 UTIL=fileio io map
-PKG=todo command $(UTIL:%=util/%)
+COMMAND=cmd flag
+PKG=todo $(UTIL:%=util/%) $(COMMAND:%=command/%)
 NAMES=main $(PKG)
 SRC=$(NAMES:%=$(SRC_DIR)/%.c)
 HEADERS=$(PKG:%=$(INC)/%.h)

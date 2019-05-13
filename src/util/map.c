@@ -3,7 +3,7 @@
 #include "util/map.h"
 
 // 'djb2' by Dan Bernstein
-hash_t hash(char* str) {
+static hash_t hash(char* str) {
 	hash_t hash = 5381;
 	int    c;
 

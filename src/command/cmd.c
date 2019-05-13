@@ -2,18 +2,43 @@
 #include <stdlib.h>
 #include <string.h> // strcmp, strcpy, strlen
 
-#include "command.h"
+#include "util/map.h"
+#include "command/cmd.h"
+#include "command/flag.h"
 
 static CMD* _root;
 static int  _override_usage = 0;
 
 static void usage();
-static CMD* findCommand(char*);
 static void init_cmd(CMD*);
 static void close_cmd(CMD*);
 
-static void set_flag_value(Flag*, char*);
-static void _print_flag(Flag, char*, int);
+static CMD* find_command(CMD** cmds, int len, char* name) {
+	for (int i = 0; i < len; i++) {
+		if (cmds[i] == NULL) {
+			continue;
+		}
+
+		if (strcmp(cmds[i]->_cmd_name, name) == 0) {
+			return cmds[i];
+		}
+	}
+	return NULL;
+}
+
+static CMD* findCommand(char* name) {
+	return find_command(_root->_sub_cmds, _root->_n_cmds, name);
+}
+
+static void _print_flag(Flag f, char* spacer, int indent) {
+	if (f.shorthand == '\0') {
+		printf("       --%s %.*s %s\n", f.name,
+		       indent - (int)strlen(f.name), spacer, f.descr);
+	} else {
+		printf("  -%c, --%s %.*s %s\n", f.shorthand, f.name,
+		       indent - (int)strlen(f.name), spacer, f.descr);
+	}
+}
 
 static void run_root(CMD* root, int argc, char** argv) {
 	usage(*root);
@@ -135,18 +160,6 @@ static int maxOfCMD(int n, CMD** cmds) {
 	return max;
 }
 
-static int maxOfFlags(int n, Flag* flags) {
-	int max = 0, len;
-
-	for (int i = 0; i < n; i++) {
-		len = strlen(flags[i].name);
-		if (len > max) {
-			max = len;
-		}
-	}
-	return max;
-}
-
 static char* spaces(int n) {
 	char* s = malloc(n);
 
@@ -253,92 +266,4 @@ void addCommand(CMD* cmd) {
 	}
 	init_cmd(cmd);
 	addToCommand(_root, cmd);
-}
-
-static CMD* find_command(CMD** cmds, int len, char* name) {
-	for (int i = 0; i < len; i++) {
-		if (cmds[i] == NULL) {
-			continue;
-		}
-
-		if (strcmp(cmds[i]->_cmd_name, name) == 0) {
-			return cmds[i];
-		}
-	}
-	return NULL;
-}
-
-static CMD* findCommand(char* name) {
-	return find_command(_root->_sub_cmds, _root->_n_cmds, name);
-}
-
-static void flagtype_check(Flag f) {
-	if (f.is_bool && f.is_string) {
-		printf("cannot have a flag that is both bool and string\n");
-		exit(1);
-	}
-	if (f.is_bool && f.size != 0) {
-		printf("size of flag value does not match the type of the flag (int)\n");
-		exit(1);
-	}
-	if (f.is_string && f.size != 0) {
-		printf("string flags are dynamically allocated, size should not be specified\n");
-		exit(1);
-	}
-}
-
-void addFlags(CMD* cmd, Flag* flags, int nflags) {
-	printf("dont use 'addFlags'\n");
-	exit(1);
-
-	for (int i = 0; i < nflags; i++) {
-		if (flags[i].triggered) {
-			printf("cannot add a flag that has already been triggered\n");
-			exit(1);
-		}
-		flagtype_check(flags[i]);
-	}
-	cmd->n_flags = nflags;
-	cmd->flags = flags;
-}
-
-static void init_flag(Flag* f) {
-	f->__name = calloc(strlen(f->name) + 3, sizeof(char));
-	f->__name[0] = '-';
-	f->__name[1] = '-';
-	strcat(f->__name, f->name);
-
-	f->__shorthand[0] = '-';
-	f->__shorthand[1] = f->shorthand;
-}
-
-void addFlag(CMD* cmd, Flag flag) {
-	cmd->flags = realloc(cmd->flags, (cmd->n_flags + 1) * sizeof(Flag));
-	init_flag(&flag);
-	cmd->flags[cmd->n_flags++] = flag;
-}
-
-static void set_flag_value(Flag* flag, char* next_arg) {
-	if (flag->is_string) {
-		int size;
-		if (next_arg == NULL) {
-			printf("must give positional argument to %s\n", flag->name);
-			exit(1);
-			size = 4;
-		} else {
-			size = strlen(next_arg);
-		}
-		flag->value = malloc(size);
-		flag->value = next_arg;
-	}
-}
-
-static void _print_flag(Flag f, char* spacer, int indent) {
-	if (f.shorthand == '\0') {
-		printf("       --%s %.*s %s\n", f.name,
-		       indent - (int)strlen(f.name), spacer, f.descr);
-	} else {
-		printf("  -%c, --%s %.*s %s\n", f.shorthand, f.name,
-		       indent - (int)strlen(f.name), spacer, f.descr);
-	}
 }

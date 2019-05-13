@@ -11,7 +11,7 @@ typedef struct node {
 	hash_t       _hash_val;
 } __tree_leaf;
 
-typedef struct {
+typedef struct hashmap {
 	struct node** __data;
 	size_t        __size;
 } Map;

@@ -3,7 +3,8 @@
 #include <inttypes.h> // strtoumax, strtoimax
 #include <string.h>
 
-#include "command.h"
+#include "command/cmd.h"
+// #include "command/flag.h"
 #include "util/fileio.h"
 #include "util/io.h"
 #include "todo.h"
@@ -151,7 +152,7 @@ static void run_get(CMD* cmd, int argc, char** args) {
 	close_todo(&todof);
 }
 
-static CMD get = {
+static CMD getCmd = {
 	.use   = "get   <line>",
 	.descr = "Show the <n>th item on the list",
 	.run   = run_get,
@@ -219,7 +220,7 @@ static void init() {
 
 	addCommand(&del);
 	addCommand(&check);
-	addCommand(&get);
+	addCommand(&getCmd);
 	addCommand(&rm);
 
 	// hidden
