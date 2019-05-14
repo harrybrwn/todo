@@ -4,6 +4,9 @@
 struct node;
 
 typedef struct {
+	char** keys;
+	int length;
+
 	struct node** __data;
 	size_t        __size;
 } Map;
@@ -14,6 +17,5 @@ void put(Map* m, char* key, void* val);
 void* get(Map* m, char* key);
 void delete(Map * m, char* key);
 void resize_map(Map** m, size_t size);
-void print_map(Map*);
 
 #endif

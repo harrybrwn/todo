@@ -4,7 +4,7 @@
 #include <string.h>
 
 #include "command/cmd.h"
-// #include "command/flag.h"
+#include "command/flag.h"
 #include "util/fileio.h"
 #include "util/io.h"
 #include "todo.h"
@@ -25,13 +25,11 @@ void show_todo(const char* filename) {
 	close_todo(&todof);
 }
 
-static void add_note(CMD* cmd, int argc, char** args) {
+void add_note(CMD* cmd, int argc, char** args) {
 	const char* file = TODOFILE;
-
-	for (int i = 0; i < cmd->n_flags; i++) {
-		if (cmd->flags[i].triggered && strcmp(cmd->flags[i].name, "file") == 0) {
-			file = (char*)cmd->flags[i].value;
-		}
+	Flag* f = getFlag(cmd, "file");
+	if (f->triggered == 1) {
+		file = (char*)f->value;
 	}
 
 	if (argc == 0) {
@@ -131,6 +129,12 @@ static CMD check = {
 	.run   = run_check,
 };
 
+static Flag un_check_flag = {
+	.name      = "undo",
+	.shorthand = 'u',
+	.descr     = "undo the crossed out todo item",
+};
+
 static void run_get(CMD* cmd, int argc, char** args) {
 	if (argc > 1) {
 		error("Error: too many arguments");
@@ -159,10 +163,6 @@ static CMD getCmd = {
 };
 
 static void run_delete(CMD* cmd, int argc, char** args) {
-	for (int i = 0; i < argc; i++) {
-		free(args[i]);
-	}
-
 	if (remove("./TODO") == 0) {
 		printf("deleted TODO.\n");
 	} else {
@@ -206,7 +206,7 @@ Flag todo_flag = {
 	.hidden    = true,
 };
 
-Flag fileFlag = {
+Flag file_flag = {
 	.name      = "file",
 	.shorthand = 'f',
 	.descr     = "give the program a spesific file to open",
@@ -214,12 +214,14 @@ Flag fileFlag = {
 };
 
 static void init() {
-	addFlag(&todo, todo_flag);
-	addFlag(&todo, fileFlag);
 	setRoot(&todo, false);
+	addFlag(&todo, &todo_flag);
+	addFlag(&todo, &file_flag);
 
 	addCommand(&del);
 	addCommand(&check);
+	addFlag(&check, &un_check_flag);
+
 	addCommand(&getCmd);
 	addCommand(&rm);
 

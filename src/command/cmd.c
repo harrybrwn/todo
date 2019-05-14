@@ -2,11 +2,12 @@
 #include <stdlib.h>
 #include <string.h> // strcmp, strcpy, strlen
 
+#include "util/io.h"
 #include "util/map.h"
 #include "command/cmd.h"
 #include "command/flag.h"
 
-static CMD* _root;
+static CMD* _root = NULL;
 static int  _override_usage = 0;
 
 static void usage();
@@ -28,16 +29,6 @@ static CMD* find_command(CMD** cmds, int len, char* name) {
 
 static CMD* findCommand(char* name) {
 	return find_command(_root->_sub_cmds, _root->_n_cmds, name);
-}
-
-static void _print_flag(Flag f, char* spacer, int indent) {
-	if (f.shorthand == '\0') {
-		printf("       --%s %.*s %s\n", f.name,
-		       indent - (int)strlen(f.name), spacer, f.descr);
-	} else {
-		printf("  -%c, --%s %.*s %s\n", f.shorthand, f.name,
-		       indent - (int)strlen(f.name), spacer, f.descr);
-	}
 }
 
 static void run_root(CMD* root, int argc, char** argv) {
@@ -68,29 +59,46 @@ void help() {
 	usage(*_root);
 }
 
+int is_flag(char* flag) {
+	if (flag[0] == '-') {
+		return true;
+	}
+	return false;
+}
+
 static void run_cmd(CMD* cmd, int argc, char** argv) {
 	int    argcount = 0;
 	char** new_argv = malloc(argc * sizeof(char*));
 
+	char* fkey;
 	for (int i = 0; i < argc; i++) {
 		if (argv[i][0] != '-') {
 			new_argv[argcount++] = argv[i];
 			continue;
 		}
+		BUG("found flag");
+		printf("%s\n", argv[i]);
 
-		for (int j = 0; j < cmd->n_flags; j++) {
-			if (
-				strcmp(argv[i], cmd->flags[j].__shorthand) == 0 ||
-				strcmp(argv[i], cmd->flags[j].__name) == 0)
-			{
-				cmd->flags[j].triggered = 1;
-
-				if (i == argc - 1) {
-					set_flag_value(&(cmd->flags[j]), NULL);
-				} else {
-					set_flag_value(&(cmd->flags[j]), argv[++i]);
-				}
+		if (is_flag(argv[i])) {
+			char* flagname = clean_flag_name(argv[i]);
+			if (strlen(flagname) == 1) {
+				fkey = (char*)get(cmd->flag_map, flagname);
+			} else {
+				fkey = flagname;
 			}
+			Flag* f = getFlag(cmd, fkey);
+			if (f == NULL) {
+				printf("null flag\n");
+			}
+
+			f->triggered = 1;
+			if (i == argc - 1) {
+				set_flag_value(f, NULL);
+			} else {
+				set_flag_value(f, argv[++i]);
+			}
+			put(cmd->flag_map, fkey, &f);
+			free(flagname);
 		}
 	}
 	new_argv = realloc(new_argv, argcount * sizeof(char*));
@@ -145,7 +153,7 @@ int close_cli() {
 		close_cmd(_root->_sub_cmds[i]);
 	}
 	free(_root->_sub_cmds);
-	free(_root->_cmd_name);
+	close_cmd(_root);
 	return 0;
 }
 
@@ -158,13 +166,6 @@ static int maxOfCMD(int n, CMD** cmds) {
 		}
 	}
 	return max;
-}
-
-static char* spaces(int n) {
-	char* s = malloc(n);
-
-	memset(s, ' ', n);
-	return s;
 }
 
 static const
@@ -192,18 +193,24 @@ void cmd_usage(CMD cmd) {
 		_print_cmd(cmd._sub_cmds[i], spacer, max);
 	}
 
-	max = maxOfFlags(cmd.n_flags, cmd.flags) + 1;
 	free(spacer);
-	spacer = spaces(max);
+	// max = maxOfFlags(cmd.n_flags, cmd.flags) + 1;
+	// spacer = spaces(max);
 
 	printf("\nFlags:\n");
-	for (int i = 0; i < cmd.n_flags; i++) {
-		if (cmd.flags[i].hidden) {
-			continue;
-		}
-		_print_flag(cmd.flags[i], spacer, max);
+	// Flag* f;
+	// for (int i = 0; i < cmd._n_flags; i++) {
+	// 	f = (Flag*)get(cmd.flag_map, cmd._flag_names[i]);
+	// 	if (f->hidden) {
+	// 		continue;
+	// 	}
+	// 	_print_flag(*f, spacer, max);
+	// }
+	// free(spacer);
+	// print_flags(cmd.flag_map, cmd._flag_names, cmd._n_flags);
+	for (int i = 0; i < cmd.flag_map->length; i++) {
+		printf("flagname: %s\n", cmd.flag_map->keys[i]);
 	}
-	free(spacer);
 }
 
 static void usage(CMD top) {
@@ -233,16 +240,39 @@ static char* get_cmd_name(char* usage) {
 
 static void init_cmd(CMD* cmd) {
 	cmd->_cmd_name = get_cmd_name(cmd->use);
+	if (cmd->flag_map == NULL) {
+		cmd->flag_map = new_map();
+	}
 }
 
 static void close_cmd(CMD* cmd) {
 	free(cmd->_cmd_name);
-	for (int i = 0; i < cmd->n_flags; i++) {
-		free(cmd->flags[i].__name);
-		if (cmd->flags[i].is_string && cmd->flags[i].triggered) {
-			free(cmd->flags[i].value);
-		}
-	}
+
+	// Flag* f = NULL;
+	// for (int i = 0; i < cmd->flag_map->length; i++) {
+	// 	if (strlen(cmd->flag_map->keys[i]) == 1) {
+	// 		free(cmd->flag_map->keys[i]);
+	// 		continue;
+	// 	}
+	// 	// printf("getting '%s'\n", cmd->flag_map->keys[i]);
+	// 	//
+	// 	// if (cmd->flag_map->keys[i] == NULL)
+	// 	// 	printf("wait this key is null\n");
+	// 	// if (cmd->flag_map == NULL)
+	// 	// 	printf("ok wtf guys\n");
+	//
+	// 	f = *(Flag**)get(cmd->flag_map, cmd->flag_map->keys[i]);
+	// 	if (f == NULL) {
+	// 		printf("%s was null in the map\n", cmd->flag_map->keys[i]);
+	// 		continue;
+	// 	}
+	// 	printf("%p\n", f);
+	// 	// if (f->name == NULL) {
+	// 	// 	printf("what?\n");
+	// 	// }
+	// 	// printf("closing: '%s'\n", (*f).name);
+	// }
+	// close_map(cmd->flag_map);
 }
 
 void addToCommand(CMD* root, CMD* cmd) {
@@ -260,7 +290,7 @@ void addCommand(CMD* cmd) {
 		printf("Error: must set root command.\n");
 		exit(1);
 	}
-	if (cmd->n_flags != 0) {
+	if (cmd->_n_flags != 0) {
 		perror("'n_flags' is a private field, do not set it");
 		exit(1);
 	}

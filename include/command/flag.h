@@ -14,12 +14,15 @@ typedef struct flag {
 	int    is_string;
 	int    triggered;
 
-	char* __name;
-	char  __shorthand[2];
+	// char* __name;
+	// char  __shorthand[2];
 } Flag;
 
-void addFlag(struct command* cmd, Flag flag);
+void addFlag(struct command* cmd, Flag* flag);
+Flag* getFlag(struct command* cmd, char* name);
 void set_flag_value(Flag* flag, void* value);
+void print_flags(Map*, char**, int);
 int maxOfFlags(int n, Flag* flags);
+char* clean_flag_name(char* raw_arg);
 
 #endif

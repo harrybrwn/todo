@@ -1,6 +1,8 @@
 #ifndef COMMAND_H
 #define COMMAND_H
 
+#define BUG(msg) printf("%s:%d - %s(): \"%s\"\n", __FILE__, __LINE__, __FUNCTION__, msg)
+
 #ifndef true
 #  define true 1
 #endif
@@ -15,11 +17,9 @@
 typedef void (* run_func)(struct command* cmd, int argc, char** argv);
 
 typedef struct command {
-	char*    use;
-	char*    descr;
-	int      hidden;
-	Flag*    flags;
-	int      n_flags;
+	char* use;
+	char* descr;
+	int   hidden;
 	Map*     flag_map;
 	run_func run;
 
@@ -27,13 +27,15 @@ typedef struct command {
 	command** _sub_cmds;
 	char*     _cmd_name;
 	int       _n_cmds;
+	char**    _flag_names;
+	int       _n_flags;
 } CMD;
 
 int parse_opts(int, char**);
 void setRoot(CMD*, int);
 
-void addCommand(CMD*);
-void addToCommand(CMD*, CMD*);
+void addCommand(CMD* cmd);
+void addToCommand(CMD* root, CMD* cmd);
 
 void help();
 int close_cli();
