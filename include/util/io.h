@@ -8,6 +8,7 @@ typedef struct _buffer {
 	char*  data;
 } Buffer;
 
+char* spaces(int n);
 Buffer* new_buffer();
 
 void close_buffer(Buffer*);

@@ -3,6 +3,13 @@
 #include <string.h>
 #include "util/io.h"
 
+char* spaces(int n) {
+	char* s = malloc(n);
+
+	memset(s, ' ', n);
+	return s;
+}
+
 Buffer* new_buffer(int size) {
 	Buffer* b = malloc(sizeof(Buffer));
 

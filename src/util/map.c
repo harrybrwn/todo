@@ -1,28 +1,32 @@
 #include <stdlib.h>
-#include <string.h>
-#include "util/map.h"
+#include "hashmap.h"
+
+#include <stdio.h>
+
+typedef unsigned long hash_t;
+
+typedef struct node {
+	char* key;
+	void* value;
+
+	struct node* _right, * _left;
+	hash_t       _hash_val;
+} __tree_leaf;
 
 // 'djb2' by Dan Bernstein
-static hash_t hash(char* str) {
+hash_t hash(char* str) {
 	hash_t hash = 5381;
 	int    c;
 
-	while ((c = *str++)) {
+	while ((c = *str++))
 		hash = ((hash << 5) + hash) + c;
-	}
 
 	return hash;
 }
 
-static size_t _map_size = 32;
-
-void set_map_size(size_t size) {
-	_map_size = size;
-}
-
 Map* new_map() {
 	Map* m = malloc(sizeof(Map));
-	m->__size = _map_size;
+	m->__size = 32;
 	m->__data = malloc(sizeof(struct node*) * m->__size);
 
 	for (int i = 0; i < m->__size; i++) {
@@ -41,15 +45,6 @@ void close_map(Map* m) {
 	free(m);
 }
 
-static struct node* new_node(char* key, void* data) {
-	struct node* n = malloc(sizeof(struct node));
-	n->key = key;
-	n->value = data;
-	n->_left = NULL;
-	n->_right = NULL;
-	return n;
-}
-
 static void insert_node(struct node* root, struct node* new) {
 	if (new->_hash_val < root->_hash_val) {
 		if (root->_left != NULL) {
@@ -64,6 +59,54 @@ static void insert_node(struct node* root, struct node* new) {
 		} else {
 			root->_right = new;
 		}
+	}
+}
+
+static void print_node(struct node* leaf) {
+	char* left_key;
+	char* right_key;
+
+	if (leaf->_left != NULL)
+		left_key = leaf->_left->key;
+	else
+		left_key = "nil";
+
+	if (leaf->_right != NULL)
+		right_key = leaf->_right->key;
+	else
+		right_key = "nil";
+
+	printf("        (%s)\n", leaf->key);
+	printf("       /          \\\n");
+	printf("     (%s)      (%s)\n", left_key, right_key);
+}
+
+static void print_tree(struct node* root) {
+	print_node(root);
+
+	if (root->_left != NULL)
+		print_tree(root->_left);
+	if (root->_right != NULL)
+		print_tree(root->_right);
+}
+
+void print_map(Map* m) {
+	for (int i = 0; i < m->__size; i++) {
+		if (m->__data[i] == NULL) {
+			printf("nil ");
+			continue;
+		}
+		printf("%s ", m->__data[i]->key);
+	}
+	printf("\n");
+
+	for (int i = 0; i < m->__size; i++) {
+		if (m->__data[i] == NULL) {
+			continue;
+		}
+		printf("\n%s\n", m->__data[i]->key);
+		print_tree(m->__data[i]);
+		printf("\n\n");
 	}
 }
 
@@ -84,9 +127,49 @@ static void delete_tree(struct node* leaf) {
 	if (leaf != NULL) {
 		delete_tree(leaf->_right);
 		delete_tree(leaf->_left);
-
 		free(leaf);
 	}
+}
+
+static struct node* _new_node(char* key, void* val, hash_t key_hash) {
+	struct node* n = malloc(sizeof(struct node));
+	n->key = key;
+	n->value = val;
+	n->_left = NULL;
+	n->_right = NULL;
+	n->_hash_val = key_hash;
+	return n;
+}
+
+static void add_node(Map* m, struct node* node, int index) {
+	struct node* old_node = m->__data[index];
+
+	if (old_node == NULL || old_node->_hash_val == node->_hash_val) {
+		m->__data[index] = node;
+	} else {
+		insert_node(old_node, node);
+	}
+}
+
+void put(Map* m, char* key, void* val) {
+	hash_t key_hash = hash(key);
+	int    index = key_hash % m->__size;
+	add_node(m, _new_node(key, val, key_hash), index);
+}
+
+void* get(Map* m, char* key) {
+	hash_t k_hash = hash(key);
+	int    index = k_hash % m->__size;
+
+	struct node* root = m->__data[index];
+	if (root == NULL) {
+		return NULL;
+	}
+
+	if (k_hash != root->_hash_val) {
+		return (search(root, k_hash))->value;
+	}
+	return root->value;
 }
 
 static void delete_leaf(struct node** leaf, hash_t key_hash) {
@@ -106,38 +189,6 @@ static void delete_leaf(struct node** leaf, hash_t key_hash) {
 	}
 }
 
-static struct node* _new_node(char* key, void* val, hash_t key_hash) {
-	struct node* n = new_node(key, val);
-	n->_hash_val = key_hash;
-	return n;
-}
-
-void put(Map* m, char* key, void* val) {
-	hash_t key_hash = hash(key);
-	int    index = key_hash % m->__size;
-
-	if (m->__data[index] == NULL) {
-		m->__data[index] = _new_node(key, val, key_hash);
-	} else {
-		insert_node(m->__data[index], _new_node(key, val, key_hash));
-	}
-}
-
-void* get(Map* m, char* key) {
-	hash_t k_hash = hash(key);
-	int    index = k_hash % m->__size;
-
-	struct node* root = m->__data[index];
-	if (root == NULL) {
-		return NULL;
-	}
-
-	if (k_hash != root->_hash_val) {
-		return (search(root, k_hash))->value;
-	}
-	return root->value;
-}
-
 void delete(Map* m, char* key) {
 	hash_t k_hash = hash(key);
 	int    index = k_hash % m->__size;
@@ -153,4 +204,34 @@ void delete(Map* m, char* key) {
 		free(m->__data[index]);
 		m->__data[index] = NULL;
 	}
+}
+
+static void copy_nodes(Map* m, struct node* n) {
+	if (n->_left != NULL) {
+		copy_nodes(m, n->_left);
+	}
+	if (n->_right != NULL) {
+		copy_nodes(m, n->_right);
+	}
+
+	int index = n->_hash_val % m->__size;
+	add_node(m, _new_node(n->key, n->value, n->_hash_val), index);
+}
+
+void resize_map(Map** old_m, size_t size) {
+	Map* new_m = malloc(sizeof(Map));
+	new_m->__size = size;
+	new_m->__data = malloc(sizeof(struct node*) * new_m->__size);
+
+	for (int i = 0; i < new_m->__size; i++) {
+		new_m->__data[i] = NULL;
+	}
+
+	for (int i = 0; i < (*old_m)->__size; i++) {
+		if ((*old_m)->__data[i] != NULL) {
+			copy_nodes(new_m, (*old_m)->__data[i]);
+		}
+	}
+	close_map(*old_m);
+	(*old_m) = new_m;
 }
