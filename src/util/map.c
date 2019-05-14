@@ -30,9 +30,6 @@ Map* new_map() {
 	m->__size = 32;
 	m->__data = malloc(sizeof(struct node*) * m->__size);
 
-	m->length = 0;
-	m->keys = malloc(sizeof(char*));
-
 	for (int i = 0; i < m->__size; i++) {
 		m->__data[i] = NULL;
 	}
@@ -48,10 +45,6 @@ void close_map(Map* m) {
 		delete_tree(m->__data[i]);
 	}
 	free(m->__data);
-	for (int i = 0; i < m->length; i++) {
-		free(m->keys[i]);
-	}
-	free(m->keys);
 	free(m);
 }
 
@@ -116,26 +109,9 @@ static void add_node(Map* m, struct node* node, int index) {
 	}
 }
 
-static void add_key(Map* m, char* key) {
-	for (int i = 0; i < m->length; i++) {
-		if (strcmp(m->keys[i], key) == 0) {
-			return;
-		}
-	}
-
-	m->keys = realloc(m->keys, (m->length + 1) * sizeof(char*));
-	m->keys[m->length] = malloc(strlen(key) + 1);
-	// m->keys[m->length++] = key;
-	strcpy(m->keys[m->length++], key);
-}
-
 void put(Map* m, char* key, void* val) {
 	hash_t key_hash = hash(key);
 	int    index = key_hash % m->__size;
-
-	// m->keys = realloc(m->keys, (m->length + 1) * sizeof(char*));
-	// m->keys[m->length++] = key;
-	add_key(m, key);
 	add_node(m, _new_node(key, val, key_hash), index);
 }
 

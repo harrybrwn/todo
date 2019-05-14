@@ -4,9 +4,6 @@
 struct node;
 
 typedef struct {
-	char** keys;
-	int length;
-
 	struct node** __data;
 	size_t        __size;
 } Map;
