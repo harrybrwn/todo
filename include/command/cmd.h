@@ -11,24 +11,23 @@
 #  define false 0
 #endif
 
-#include "util/map.h"
 #include "command/flag.h"
 
 typedef void (* run_func)(struct command* cmd, int argc, char** argv);
 
 typedef struct command {
-	char* use;
-	char* descr;
-	int   hidden;
-	Map*     flag_map;
+	char*    use;
+	char*    descr;
+	int      hidden;
 	run_func run;
 
 	struct
 	command** _sub_cmds;
 	char*     _cmd_name;
 	int       _n_cmds;
-	char**    _flag_names;
-	int       _n_flags;
+
+	Flag* _flags[MAX_FLAGS];
+	int   _nflags;
 } CMD;
 
 int parse_opts(int, char**);

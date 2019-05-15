@@ -59,52 +59,31 @@ void help() {
 	usage(*_root);
 }
 
-int is_flag(char* flag) {
-	if (flag[0] == '-') {
-		return true;
-	}
-	return false;
-}
-
 static void run_cmd(CMD* cmd, int argc, char** argv) {
-	int    argcount = 0;
-	char** new_argv = malloc(argc * sizeof(char*));
+	int nflags = flag_count(argc, argv);
+	int n_args = argc - nflags;
+	int cnt = 0;
 
-	char* fkey;
+	char** newargs = malloc(n_args * sizeof(char*));
+
 	for (int i = 0; i < argc; i++) {
-		if (argv[i][0] != '-') {
-			new_argv[argcount++] = argv[i];
+		if (argv[i][0] == '-') {
+			for (int f = 0; f < cmd->_nflags; f++) {
+				if (is_flag(cmd->_flags[f], argv[i])) {
+					cmd->_flags[f]->triggered = 1;
+					if (i == argc - 1) {
+						set_flag_value(cmd->_flags[f], argv[++i]);
+					} else {
+						set_flag_value(cmd->_flags[f], NULL);
+					}
+				}
+			}
 			continue;
 		}
-		BUG("found flag");
-		printf("%s\n", argv[i]);
-
-		if (is_flag(argv[i])) {
-			char* flagname = clean_flag_name(argv[i]);
-			if (strlen(flagname) == 1) {
-				fkey = (char*)get(cmd->flag_map, flagname);
-			} else {
-				fkey = flagname;
-			}
-			Flag* f = getFlag(cmd, fkey);
-			if (f == NULL) {
-				printf("null flag\n");
-			}
-
-			f->triggered = 1;
-			if (i == argc - 1) {
-				set_flag_value(f, NULL);
-			} else {
-				set_flag_value(f, argv[++i]);
-			}
-			put(cmd->flag_map, fkey, &f);
-			free(flagname);
-		}
+		newargs[cnt++] = argv[i];
 	}
-	new_argv = realloc(new_argv, argcount * sizeof(char*));
-
-	(*cmd).run(cmd, argcount, new_argv);
-	free(new_argv);
+	(*cmd).run(cmd, n_args, newargs);
+	free(newargs);
 }
 
 int parse_opts(int argc, char** argv) {
@@ -115,7 +94,7 @@ int parse_opts(int argc, char** argv) {
 	}
 
 	if (argc == 1) {
-		(*_root).run(_root, --argc, ++argv);
+		run_cmd(_root, --argc, ++argv);
 		return false;
 	}
 
@@ -194,33 +173,18 @@ void cmd_usage(CMD cmd) {
 	}
 
 	free(spacer);
-	// max = maxOfFlags(cmd.n_flags, cmd.flags) + 1;
-	// spacer = spaces(max);
-
 	printf("\nFlags:\n");
-	// Flag* f;
-	// for (int i = 0; i < cmd._n_flags; i++) {
-	// 	f = (Flag*)get(cmd.flag_map, cmd._flag_names[i]);
-	// 	if (f->hidden) {
-	// 		continue;
-	// 	}
-	// 	_print_flag(*f, spacer, max);
-	// }
-	// free(spacer);
-	// print_flags(cmd.flag_map, cmd._flag_names, cmd._n_flags);
-	for (int i = 0; i < cmd.flag_map->length; i++) {
-		printf("flagname: %s\n", cmd.flag_map->keys[i]);
-	}
+	print_flags(&cmd);
+	printf("  -h, --help   get help for %s\n", cmd._cmd_name);
 }
 
-static void usage(CMD top) {
+static void usage(CMD top, int argc, char** argv) {
 	if (_override_usage) {
 		printf("%s\n", top.descr);
 		return;
 	}
 
 	cmd_usage(top);
-	printf("  -h, --help   get help for %s\n", top._cmd_name);
 }
 
 static char* get_cmd_name(char* usage) {
@@ -240,39 +204,11 @@ static char* get_cmd_name(char* usage) {
 
 static void init_cmd(CMD* cmd) {
 	cmd->_cmd_name = get_cmd_name(cmd->use);
-	if (cmd->flag_map == NULL) {
-		cmd->flag_map = new_map();
-	}
+	cmd->_nflags = 0;
 }
 
 static void close_cmd(CMD* cmd) {
 	free(cmd->_cmd_name);
-
-	// Flag* f = NULL;
-	// for (int i = 0; i < cmd->flag_map->length; i++) {
-	// 	if (strlen(cmd->flag_map->keys[i]) == 1) {
-	// 		free(cmd->flag_map->keys[i]);
-	// 		continue;
-	// 	}
-	// 	// printf("getting '%s'\n", cmd->flag_map->keys[i]);
-	// 	//
-	// 	// if (cmd->flag_map->keys[i] == NULL)
-	// 	// 	printf("wait this key is null\n");
-	// 	// if (cmd->flag_map == NULL)
-	// 	// 	printf("ok wtf guys\n");
-	//
-	// 	f = *(Flag**)get(cmd->flag_map, cmd->flag_map->keys[i]);
-	// 	if (f == NULL) {
-	// 		printf("%s was null in the map\n", cmd->flag_map->keys[i]);
-	// 		continue;
-	// 	}
-	// 	printf("%p\n", f);
-	// 	// if (f->name == NULL) {
-	// 	// 	printf("what?\n");
-	// 	// }
-	// 	// printf("closing: '%s'\n", (*f).name);
-	// }
-	// close_map(cmd->flag_map);
 }
 
 void addToCommand(CMD* root, CMD* cmd) {
@@ -288,10 +224,6 @@ void addToCommand(CMD* root, CMD* cmd) {
 void addCommand(CMD* cmd) {
 	if (_root == NULL) {
 		printf("Error: must set root command.\n");
-		exit(1);
-	}
-	if (cmd->_n_flags != 0) {
-		perror("'n_flags' is a private field, do not set it");
 		exit(1);
 	}
 	init_cmd(cmd);

@@ -3,21 +3,8 @@
 #include <string.h>
 
 #include "util/io.h"
-#include "util/map.h"
 #include "command/cmd.h"
 #include "command/flag.h"
-
-#define MAX_FLAG_LENGTH 32
-
-static void init_flag(Flag* f) {
-	// f->__name = calloc(strlen(f->name) + 3, sizeof(char));
-	// f->__name[0] = '-';
-	// f->__name[1] = '-';
-	// strcat(f->__name, f->name);
-
-	// f->__shorthand[0] = '-';
-	// f->__shorthand[1] = f->shorthand;
-}
 
 static void flagtype_check(Flag f) {
 	if (f.is_bool && f.is_string) {
@@ -34,11 +21,14 @@ static void flagtype_check(Flag f) {
 	}
 }
 
-int maxOfFlags(int n, Flag* flags) {
+int maxOfFlags(int n, Flag** flags) {
 	int max = 0, len;
 
 	for (int i = 0; i < n; i++) {
-		len = strlen(flags[i].name);
+		if (flags[i] == NULL) {
+			continue;
+		}
+		len = strlen(flags[i]->name);
 		if (len > max) {
 			max = len;
 		}
@@ -54,79 +44,71 @@ char* char_to_str(char c) {
 }
 
 void addFlag(CMD* cmd, Flag* flag) {
-	// cmd->flags = realloc(cmd->flags, (cmd->n_flags + 1) * sizeof(Flag));
-	init_flag(flag);
 	flagtype_check(*flag);
-	// cmd->flags[cmd->n_flags++] = flag;
-	cmd->_flag_names = realloc(cmd->_flag_names,
-	                           MAX_FLAG_LENGTH * (cmd->_n_flags + 1));
-	cmd->_flag_names[cmd->_n_flags++] = flag->name;
 
-	if (cmd->flag_map == NULL) {
-		cmd->flag_map = new_map();
+	if (cmd->_nflags == MAX_FLAGS - 1) {
+		fprintf(stdout, "too many flags added to %s\n", cmd->_cmd_name);
+		exit(1);
 	}
 
-	put(cmd->flag_map, flag->name, &flag);
-	if (flag->shorthand != '\0') {
-		char* name = malloc(2);
-		name[0] = flag->shorthand; name[1] = '\0';
-		put(cmd->flag_map, name, flag->name);
-	}
+	cmd->_flags[cmd->_nflags++] = flag;
 }
 
-static void _print_flag(Flag f, char* spacer, int indent) {
-	if (f.shorthand == '\0') {
-		printf("       --%s %.*s %s\n", f.name,
-		       indent - (int)strlen(f.name), spacer, f.descr);
-	} else {
-		printf("  -%c, --%s %.*s %s\n", f.shorthand, f.name,
-		       indent - (int)strlen(f.name), spacer, f.descr);
-	}
-}
-
-void print_flags(Map* flagm, char** names, int n) {
-	// Flag** flags = malloc(n * sizeof(Flag*));
-	int    max = 0, len;
-	// for (int i = 0; i < n; i++) {
-	// 	len = strlen(names[i]);
-	// 	if (len > max) {
-	// 		max = len;
-	// 	}
-	// 	flags[i] = get(flagm, names[i]);
-	// }
-	for (int i = 0; i < flagm->length; i++) {
-		len = strlen(flagm->keys[i]);
-		if (len > max)
-			max = len;
-	}
-	char* spacer = spaces(max + 1);
-	Flag* f;
-	for (int i = 0; i <flagm->length; i++) {
-		f = (Flag*)get(flagm, flagm->keys[i]);
-		if (f->hidden) {
-			continue;
+Flag* getFlag(CMD* cmd, char* flagname) {
+	for (int i = 0; i < cmd->_nflags; i++) {
+		if (strcmp(flagname, cmd->_flags[i]->name) == 0) {
+			return cmd->_flags[i];
 		}
-		_print_flag(*f, spacer, max);
 	}
-
-	// for (int i = 0; i < n; i++) {
-	// 	if (flags[i]->hidden) {
-	// 		continue;
-	// 	}
-	// 	_print_flag(*flags[i], spacer, max);
-	// }
-	// free(flags);
-	free(spacer);
+	return (Flag*)NULL;
 }
 
-Flag* getFlag(CMD* cmd, char* name) {
-	char* fname;
-	if (strlen(name) == 1) {
-		fname = (char*)get(cmd->flag_map, name);
-	} else {
-		fname = name;
+static int is_flag_name(char* name) {
+	return name[0] == '-';
+}
+
+int flag_count(int argc, char** argv) {
+	int c = 0;
+	for (int i = 0; i < argc; i++) {
+		if (is_flag_name(argv[i])) {
+			c++;
+		}
 	}
-	return *(Flag**)get(cmd->flag_map, fname);
+	return c;
+}
+
+char** parse_flags(int flagc, int argc, char** argv) {
+	char** args = malloc(flagc * sizeof(char*));
+	int    cnt = 0;
+
+	for (int i = 0; i < argc; i++) {
+		if (is_flag_name(argv[i])) {
+			args[cnt++] = argv[i];
+		}
+	}
+	return args;
+}
+
+static void _print_flag(Flag* f, char* spacer, int indent) {
+	if (f->shorthand == '\0') {
+		printf("       --%s %.*s %s\n", f->name,
+		       indent - (int)strlen(f->name), spacer, f->descr);
+	} else {
+		printf("  -%c, --%s %.*s %s\n", f->shorthand, f->name,
+		       indent - (int)strlen(f->name), spacer, f->descr);
+	}
+}
+
+void print_flags(CMD* cmd) {
+	int   max = maxOfFlags(cmd->_nflags, cmd->_flags);
+	char* buf = spaces(max + 1);
+
+	for (int i = 0; i < cmd->_nflags; i++) {
+		if (cmd->_flags[i] != NULL && !cmd->_flags[i]->hidden) {
+			_print_flag(cmd->_flags[i], buf, max);
+		}
+	}
+	free(buf);
 }
 
 void set_flag_value(Flag* flag, void* value) {
@@ -156,4 +138,18 @@ char* clean_flag_name(char* raw_arg) {
 	}
 	cleaned[cnt] = '\0';
 	return cleaned;
+}
+
+int is_flag(Flag* flag, char* arg) {
+	char* name = clean_flag_name(arg);
+	if (strlen(name) == 1) {
+		if (name[0] == flag->shorthand) {
+			return 1;
+		}
+	} else if (strcmp(name, flag->name) == 0) {
+		return 1;
+	}
+
+	free(name);
+	return 0;
 }

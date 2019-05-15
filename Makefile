@@ -64,7 +64,7 @@ lint:
 
 test:
 	@$(CC) $(CFLAGS) -o $(TEST) $(PKG:%=$(SRC_DIR)/%.c) tests/test.c
-	@$(TEST)
+	@$(TEST) this is a test with args
 
 
 all: setup asm obj bin/proc/pre-proc.i bin/todo

@@ -27,8 +27,8 @@ void show_todo(const char* filename) {
 
 void add_note(CMD* cmd, int argc, char** args) {
 	const char* file = TODOFILE;
-	Flag* f = getFlag(cmd, "file");
-	if (f->triggered == 1) {
+	Flag*       f = getFlag(cmd, "file");
+	if (f->triggered) {
 		file = (char*)f->value;
 	}
 
