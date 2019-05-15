@@ -4,6 +4,7 @@
 
 #include "util/io.h"
 #include "util/map.h"
+#include "util/stack.h"
 #include "command/cmd.h"
 #include "command/flag.h"
 
@@ -59,31 +60,70 @@ void help() {
 	usage(*_root);
 }
 
-static void run_cmd(CMD* cmd, int argc, char** argv) {
-	int nflags = flag_count(argc, argv);
-	int n_args = argc - nflags;
-	int cnt = 0;
-
-	char** newargs = malloc(n_args * sizeof(char*));
-
-	for (int i = 0; i < argc; i++) {
-		if (argv[i][0] == '-') {
-			for (int f = 0; f < cmd->_nflags; f++) {
-				if (is_flag(cmd->_flags[f], argv[i])) {
-					cmd->_flags[f]->triggered = 1;
-					if (i == argc - 1) {
-						set_flag_value(cmd->_flags[f], argv[++i]);
-					} else {
-						set_flag_value(cmd->_flags[f], NULL);
-					}
-				}
-			}
-			continue;
+void printarr(int c, char** arr) {
+	printf("[");
+	for (int i = 0; i < c; i++) {
+		if (i == c - 1) {
+			printf("%s", arr[i]);
+		} else {
+			printf("%s, ", arr[i]);
 		}
-		newargs[cnt++] = argv[i];
 	}
-	(*cmd).run(cmd, n_args, newargs);
-	free(newargs);
+	printf("]\n");
+}
+
+typedef struct cmd_args {
+	int    argc;
+	char** argv;
+	int    flagcount;
+} CmdArgs;
+
+static int trigger_flag(CMD* cmd, char* name, Args** args) {
+	int args_used = 0;
+	for (int i = 0; i < cmd->_nflags; i++) {
+		if (is_flag(cmd->_flags[i], name)) {
+			cmd->_flags[i]->triggered = 1;
+			if (hasnext(args)) {
+				args_used++;
+				set_flag_value(cmd->_flags[i], pop_arg(args));
+			} else {
+				set_flag_value(cmd->_flags[i], NULL);
+			}
+		}
+	}
+	return args_used;
+}
+
+static struct cmd_args* parse_flags(CMD* cmd, int argc, char** argv) {
+	int    fcount = flag_count(argc, argv);
+	int    n_args = argc - fcount;
+	int    cnt = 0;
+	char** newargs = malloc(n_args * sizeof(char*));
+	Args*  args = arg_stack(argc, argv);
+
+	char* tmp;
+	while (args != NULL) {
+		tmp = pop_arg(&args);
+		if (tmp[0] == '-') {
+			n_args -= trigger_flag(cmd, tmp, &args);
+		} else {
+			newargs[cnt++] = tmp;
+		}
+	}
+
+	struct cmd_args* new = malloc(sizeof(CmdArgs));
+	new->argc = cnt;
+	new->argv = newargs;
+	new->flagcount = fcount;
+	return new;
+}
+
+static void run_cmd(CMD* cmd, int argc, char** argv) {
+	CmdArgs* args = parse_flags(cmd, argc, argv);
+
+	(*cmd).run(cmd, args->argc, args->argv);
+	free(args->argv);
+	free(args);
 }
 
 int parse_opts(int argc, char** argv) {
@@ -149,8 +189,7 @@ static int maxOfCMD(int n, CMD** cmds) {
 
 static const
 char* help_template = "%s\n\n"
-                      "Usage:\n  %s\n\n"
-                      "Options:\n";
+                      "Usage:\n  %s\n";
 
 static void _print_cmd(CMD* c, char* spacer, int indent) {
 	printf("  %s %.*s %s\n",
@@ -164,17 +203,21 @@ void cmd_usage(CMD cmd) {
 	char* spacer = spaces(max + 1);
 
 	printf(help_template, cmd.descr, cmd.use);
-
-	for (int i = 0; i < cmd._n_cmds; i++) {
-		if (cmd._sub_cmds[i]->hidden) {
-			continue;
+	if (cmd._n_cmds > 0) {
+		printf("\nOptions:\n");
+		for (int i = 0; i < cmd._n_cmds; i++) {
+			if (cmd._sub_cmds[i]->hidden) {
+				continue;
+			}
+			_print_cmd(cmd._sub_cmds[i], spacer, max);
 		}
-		_print_cmd(cmd._sub_cmds[i], spacer, max);
 	}
 
 	free(spacer);
 	printf("\nFlags:\n");
-	print_flags(&cmd);
+	if (cmd._nflags > 0) {
+		print_flags(&cmd);
+	}
 	printf("  -h, --help   get help for %s\n", cmd._cmd_name);
 }
 

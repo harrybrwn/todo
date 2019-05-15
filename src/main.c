@@ -25,9 +25,13 @@ void show_todo(const char* filename) {
 	close_todo(&todof);
 }
 
+void printarr(int c, char** arr);
+
 void add_note(CMD* cmd, int argc, char** args) {
-	const char* file = TODOFILE;
-	Flag*       f = getFlag(cmd, "file");
+	const
+	char* file = TODOFILE;
+	Flag* f = getFlag(cmd, "file");
+
 	if (f->triggered) {
 		file = (char*)f->value;
 	}
@@ -71,8 +75,14 @@ static void run_rm(CMD* cmd, int argc, char** argv) {
 	} else if (argc < 1) {
 		error("Error: must give note number");
 	}
+	const char* file = TODOFILE;
 
-	TODO* todof = open_todo("./TODO", "r+");
+	Flag* f = getFlag(cmd, "file");
+	if (f->triggered) {
+		file = (char*)f->value;
+	}
+
+	TODO* todof = open_todo(file, "r+");
 	int   line_index = parse_int(argv[0]) - 1;
 
 	if (line_index > todof->lines) {
@@ -203,7 +213,7 @@ Flag todo_flag = {
 	.descr     = "test out the todo command.",
 	.shorthand = 't',
 	.is_bool   = true,
-	.hidden    = true,
+	// .hidden    = true,
 };
 
 Flag file_flag = {
@@ -219,11 +229,17 @@ static void init() {
 	addFlag(&todo, &file_flag);
 
 	addCommand(&del);
+	addFlag(&del, &file_flag);
+
 	addCommand(&check);
 	addFlag(&check, &un_check_flag);
+	addFlag(&check, &file_flag);
 
 	addCommand(&getCmd);
+	addFlag(&getCmd, &file_flag);
+
 	addCommand(&rm);
+	addFlag(&rm, &file_flag);
 
 	// hidden
 	addCommand(&test);

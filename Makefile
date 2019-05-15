@@ -13,7 +13,7 @@ FMT_CONFIG=lint.cfg
 
 
 # Files
-UTIL=fileio io map
+UTIL=fileio io map stack
 COMMAND=cmd flag
 PKG=todo $(UTIL:%=util/%) $(COMMAND:%=command/%)
 NAMES=main $(PKG)

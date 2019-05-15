@@ -77,18 +77,6 @@ int flag_count(int argc, char** argv) {
 	return c;
 }
 
-char** parse_flags(int flagc, int argc, char** argv) {
-	char** args = malloc(flagc * sizeof(char*));
-	int    cnt = 0;
-
-	for (int i = 0; i < argc; i++) {
-		if (is_flag_name(argv[i])) {
-			args[cnt++] = argv[i];
-		}
-	}
-	return args;
-}
-
 static void _print_flag(Flag* f, char* spacer, int indent) {
 	if (f->shorthand == '\0') {
 		printf("       --%s %.*s %s\n", f->name,
