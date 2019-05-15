@@ -52,8 +52,9 @@ void add_note(CMD* cmd, int argc, char** args) {
 	}
 	bufputc(buf, '\0');
 
-	Note* n = new_note(todof->lines + 1, buf->data, NULL);
+	Note* n = new_note(todof->lines + 1, buf->buffer, NULL);
 	write_note(n, todof->stream);
+	free(buf);
 	close_todo(&todof);
 	close_note(&n);
 }
@@ -127,7 +128,7 @@ void run_check(CMD* cmd, int argc, char** argv) {
 		bufputc(buf, '-');
 		bufputc(buf, todof->notes[line_index]->note[i]);
 	}
-	todof->notes[line_index]->note = buf->data;
+	todof->notes[line_index]->note = buf->buffer;
 
 	print_todo(todof);
 	write_todo(todof);
@@ -173,8 +174,14 @@ static CMD getCmd = {
 };
 
 static void run_delete(CMD* cmd, int argc, char** args) {
-	if (remove("./TODO") == 0) {
-		printf("deleted TODO.\n");
+	const char* file = TODOFILE;
+	Flag* f = getFlag(cmd, "file");
+	if (f->triggered) {
+		file = (char*)f->value;
+	}
+
+	if (remove(file) == 0) {
+		printf("deleted '%s'.\n", file);
 	} else {
 		printf("cannot delete 'TODO' file\n");
 	}
@@ -213,7 +220,7 @@ Flag todo_flag = {
 	.descr     = "test out the todo command.",
 	.shorthand = 't',
 	.is_bool   = true,
-	// .hidden    = true,
+	.hidden    = true,
 };
 
 Flag file_flag = {
@@ -223,23 +230,19 @@ Flag file_flag = {
 	.is_string = true,
 };
 
+static CMD* commands[4] = {&del, &check, &getCmd, &rm};
+
 static void init() {
 	setRoot(&todo, false);
 	addFlag(&todo, &todo_flag);
 	addFlag(&todo, &file_flag);
 
-	addCommand(&del);
-	addFlag(&del, &file_flag);
+	for (int i = 0; i < 4; i++) {
+		addCommand(commands[i]);
+		addFlag(commands[i], &file_flag);
+	}
 
-	addCommand(&check);
 	addFlag(&check, &un_check_flag);
-	addFlag(&check, &file_flag);
-
-	addCommand(&getCmd);
-	addFlag(&getCmd, &file_flag);
-
-	addCommand(&rm);
-	addFlag(&rm, &file_flag);
 
 	// hidden
 	addCommand(&test);

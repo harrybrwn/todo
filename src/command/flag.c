@@ -116,6 +116,7 @@ char* clean_flag_name(char* raw_arg) {
 		cleaned = malloc(len - 1);
 	} else {
 		cleaned = malloc(2);
+		len = 1;
 	}
 	int cnt = 0;
 	for (int i = 0; i < len; i++) {
@@ -132,12 +133,14 @@ int is_flag(Flag* flag, char* arg) {
 	char* name = clean_flag_name(arg);
 	if (strlen(name) == 1) {
 		if (name[0] == flag->shorthand) {
+			free(name);
 			return 1;
 		}
 	} else if (strcmp(name, flag->name) == 0) {
+		free(name);
 		return 1;
 	}
-
 	free(name);
+
 	return 0;
 }

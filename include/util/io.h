@@ -5,13 +5,13 @@ typedef struct _buffer {
 	size_t size;
 	size_t len;
 	int    _growby;
-	char*  data;
+	char*  buffer;
 } Buffer;
 
 char* spaces(int n);
 Buffer* new_buffer();
 
-void close_buffer(Buffer*);
+void delete_buffer(Buffer*);
 
 void bufputc(Buffer*, char);
 int bufputs(Buffer*, const char*);

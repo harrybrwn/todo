@@ -66,7 +66,16 @@ test:
 	@$(CC) $(CFLAGS) -o $(TEST) $(PKG:%=$(SRC_DIR)/%.c) tests/test.c
 	@$(TEST) this is a test with args
 
+MEM=valgrind --leak-check=full
+
+check: $(OUT)
+	$(MEM) $(OUT)
+	@echo
+	$(MEM) $(OUT) this is a test note
+	@echo
+	$(MEM) $(OUT) --file test.txt
+
 
 all: setup asm obj bin/proc/pre-proc.i bin/todo
 
-.PHONY: setup clean obj asm all pre-proc test fmt lint
+.PHONY: setup clean obj asm all pre-proc test fmt lint check

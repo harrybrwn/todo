@@ -16,12 +16,12 @@ Buffer* new_buffer(int size) {
 	b->len = 0;
 	b->size = size;
 	b->_growby = 16;
-	b->data = malloc(b->size * sizeof(char));
+	b->buffer = malloc(b->size * sizeof(char));
 	return b;
 }
 
-void close_buffer(Buffer* buf) {
-	free(buf->data);
+void delete_buffer(Buffer* buf) {
+	free(buf->buffer);
 	free(buf);
 }
 
@@ -30,7 +30,7 @@ void bufputc(Buffer* buf, char c) {
 		growb(buf, buf->_growby);
 	}
 
-	buf->data[buf->len++] = c;
+	buf->buffer[buf->len++] = c;
 }
 
 int bufputs(Buffer* buf, const char* raw) {
@@ -51,12 +51,12 @@ int freadb(Buffer* buf, FILE* fp) {
 			growb(buf, 16);
 		}
 
-		buf->data[buf->len] = c;
+		buf->buffer[buf->len] = c;
 	}
 	return 1;
 }
 
 void growb(Buffer* buf, int by) {
 	buf->size += by;
-	buf->data = realloc(buf->data, buf->size);
+	buf->buffer = realloc(buf->buffer, buf->size);
 }
