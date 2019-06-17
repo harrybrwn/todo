@@ -27,6 +27,11 @@ TEST=tests/test
 $(OUT): $(SRC) $(HEADERS)
 	$(CC) -o $(OUT) $(CFLAGS) $(SRC)
 
+install: $(OUT)
+	@cp $(OUT) $$HOME/bin
+
+.PHONY: install
+
 obj: $(SRC)
 	$(CC) $(CFLAGS) -c $^
 	@for file in $(NAMES:%=$(OBJ_DIR)/%.o); do mv `basename $$file` $$file; done

@@ -90,6 +90,7 @@ static void run_rm(CMD* cmd, int argc, char** argv) {
 		error("Error: todo file is not that long");
 	}
 
+	close_note(&todof->notes[line_index]);
 	todof->notes[line_index] = NULL;
 	if (todof->length == 1) {
 		todof->length = 2;

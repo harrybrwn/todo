@@ -120,10 +120,11 @@ Note* new_note(int lineno, char* data, char* category) {
 
 Note* read_note(FILE* file) {
 	Note* note = malloc(sizeof(Note));
-	char  num[3];
+	char  num[4];
 	char  c;
 
-	for (int i = 0; (c = fgetc(file)) != '.'; i++) {
+	int i;
+	for (i = 0; (c = fgetc(file)) != '.'; i++) {
 		if (c == EOF) {
 			return NULL;
 		}
@@ -131,6 +132,7 @@ Note* read_note(FILE* file) {
 			num[i] = c;
 		}
 	}
+	num[i] = '\0';
 	while ((c = fgetc(file)) != ' ') {}; // skip white space between line no. and note
 
 	// line number

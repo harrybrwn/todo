@@ -22,7 +22,7 @@ var (
 	logging = flags.Bool("log", false, "log the full output to a file")
 	debug   = flags.Bool("debug", false, "debug the memcheck program")
 	fullout = flags.Bool("fulloutput", false, "show the fulloutput from valgrind")
-	stopErr = flag.Bool("stop-on-error", false, "stop the program if an error is found for one command")
+	stopErr = flags.Bool("stop-on-error", false, "stop the program if an error is found for one command")
 
 	prog string
 	verbose bool
