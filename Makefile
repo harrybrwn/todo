@@ -66,15 +66,17 @@ test:
 	@$(CC) $(CFLAGS) -o $(TEST) $(PKG:%=$(SRC_DIR)/%.c) tests/test.c
 	@$(TEST) this is a test with args
 
-MEM=valgrind --leak-check=full
+
+CHECK=go run ./scripts/memcheck.go
+CHECKARGS=:\
+	this is a test note:\
+	rm 1:\
+	--file test.txt:\
+	--file test.txt this is a test note:\
+	rm 1 --file test.txt\
 
 check: $(OUT)
-	$(MEM) $(OUT)
-	@echo
-	$(MEM) $(OUT) this is a test note
-	@echo
-	$(MEM) $(OUT) --file test.txt
-
+	@$(CHECK) -p bin/todo -opts "$(CHECKARGS)" -stop-on-error
 
 all: setup asm obj bin/proc/pre-proc.i bin/todo
 

@@ -1,6 +1,10 @@
 #ifndef HASHMAP_H
 #define HASHMAP_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct node;
 
 struct hashmap {
@@ -29,5 +33,9 @@ void delete(Map * m, char* key);
 // resize_map will change the internal size of the map. Changing the size of a
 // map could result in increased hash collisions.
 void resize_map(Map** m, size_t size);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

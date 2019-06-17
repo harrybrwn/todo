@@ -8,6 +8,7 @@ bin/todo
 *.o
 *.out
 *.i
+*.log
 
 # Tests
 test*
