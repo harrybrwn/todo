@@ -25,6 +25,7 @@ TEST=tests/test
 
 
 $(OUT): $(SRC) $(HEADERS)
+	@if [ ! -d "bin" ]; then mkdir bin; fi
 	$(CC) -o $(OUT) $(CFLAGS) $(SRC)
 
 install: $(OUT)
