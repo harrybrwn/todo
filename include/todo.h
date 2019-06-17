@@ -1,6 +1,10 @@
 #ifndef TODO_H
 #define TODO_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct _note {
 	int   line;
 	char* note;
@@ -29,4 +33,8 @@ Note* read_note(FILE*);
 
 void close_note(Note**);
 
+#ifdef __cplusplus
+}
 #endif
+
+#endif /* TODO_H */

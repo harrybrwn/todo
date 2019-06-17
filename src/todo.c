@@ -1,27 +1,12 @@
 #include <stdio.h>  // printf
 #include <stdlib.h>  // malloc, calloc, realloc
 #include <string.h> // strcmp, strcpy, strlen
+#include <ctype.h> // isdigit
 #include <inttypes.h>
 
 #include "util/fileio.h"  // file_len, file_lines
 #include "util/io.h"
 #include "todo.h"
-
-static int isInt(char x) {
-	switch (x) {
-	case '0': return 1;
-	case '1': return 1;
-	case '2': return 1;
-	case '3': return 1;
-	case '4': return 1;
-	case '5': return 1;
-	case '6': return 1;
-	case '7': return 1;
-	case '8': return 1;
-	case '9': return 1;
-	default: return 0;
-	}
-}
 
 TODO* open_todo(const char* fname, const char* mode) {
 	FILE* f = fopen(fname, mode);
@@ -142,7 +127,7 @@ Note* read_note(FILE* file) {
 		if (c == EOF) {
 			return NULL;
 		}
-		if (isInt(c)) {
+		if (isdigit(c)) {
 			num[i] = c;
 		}
 	}
